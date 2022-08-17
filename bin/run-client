@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+shift
+export CARDANO_NODE_SOCKET_PATH=${CARDANO_NODE_SOCKET_PATH:-/opt/cardano/ipc/socket}
+/usr/local/bin/cardano-cli ${@}

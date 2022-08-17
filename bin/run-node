@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+echo "Running the cardano node ..."
+
+# setup options
+shift
+options=(${@})
+for i in ${!options[@]}; do
+	j=$((i+1))
+	k=${options[i]}
+	v=${options[j]}
+	found=false
+	case ${k} in
+		--config) CARDANO_CONFIG=${v}; found=true ;;
+		--database-path) CARDANO_DATABASE_PATH=${v}; found=true ;;
+		--host-addr) CARDANO_BIND_ADDR=${v}; found=true ;;
+		--port) CARDANO_PORT=${v}; found=true ;;
+		--shelley-kes-key) CARDANO_SHELLEY_KES_KEY=${v}; found=true ;;
+		--shelley-operational-certificate) CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${v}; found=true ;;
+		--shelley-vrf-key) CARDANO_SHELLEY_VRF_KEY=${v}; found=true ;;
+		--socket-path) CARDANO_SOCKET_PATH=${v}; found=true ;;
+		--topology) CARDANO_TOPOLOGY=${v}; found=true ;;
+	esac
+	if [[ ${found} == true ]]; then
+		options[i]="";
+		options[j]="";
+	fi
+done
+
+# variables
+CARDANO_CONFIG_BASE=${CARDANO_CONFIG_BASE:-/opt/cardano/config}
+# common
+CARDANO_BIND_ADDR=${CARDANO_BIND_ADDR:-0.0.0.0}
+CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER:-false}
+CARDANO_CONFIG=${CARDANO_CONFIG:-${CARDANO_CONFIG_BASE}/mainnet-config.json}
+CARDANO_DATABASE_PATH=${CARDANO_DATABASE_PATH:-/opt/cardano/data}
+CARDANO_LOG_DIR=${CARDANO_LOG_DIR:-/opt/cardano/logs}
+CARDANO_PORT=${CARDANO_PORT:-3001}
+CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket}
+CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY:-${CARDANO_CONFIG_BASE}/mainnet-topology.json}
+
+echo CARDANO_BIND_ADDR=${CARDANO_BIND_ADDR}
+echo CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER}
+echo CARDANO_CONFIG=${CARDANO_CONFIG}
+echo CARDANO_DATABASE_PATH=${CARDANO_DATABASE_PATH}
+echo CARDANO_LOG_DIR=${CARDANO_LOG_DIR}
+echo CARDANO_PORT=${CARDANO_PORT}
+echo CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH}
+echo CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY}
+
+# block producer only
+if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
+	CARDANO_SHELLEY_KES_KEY=${CARDANO_SHELLEY_KES_KEY:-${CARDANO_CONFIG_BASE}/keys/kes.skey}
+	CARDANO_SHELLEY_VRF_KEY=${CARDANO_SHELLEY_VRF_KEY:-${CARDANO_CONFIG_BASE}/keys/vrf.skey}
+	CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE:-${CARDANO_CONFIG_BASE}/keys/node.cert}
+	echo CARDANO_SHELLEY_KES_KEY=${CARDANO_SHELLEY_KES_KEY}
+	echo CARDANO_SHELLEY_VRF_KEY=${CARDANO_SHELLEY_VRF_KEY}
+	echo CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE}
+fi
+
+# write out env
+cat << EOF > /usr/local/bin/env
+#!/usr/bin/env bash
+
+CARDANO_BIND_ADDR=${CARDANO_BIND_ADDR}
+CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER}
+CARDANO_CONFIG=${CARDANO_CONFIG}
+CARDANO_CUSTOM_PEERS=${CARDANO_CUSTOM_PEERS}
+CARDANO_DATABASE_PATH=${CARDANO_DATABASE_PATH}
+CARDANO_LOG_DIR=${CARDANO_LOG_DIR}
+CARDANO_PORT=${CARDANO_PORT}
+CARDANO_PUBLIC_IP=${CARDANO_PUBLIC_IP}
+CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH}
+CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY}
+
+# mapping for topologyUpdater
+CNODE_HOSTNAME=${CARDANO_PUBLIC_IP}
+CNODE_PORT=${CARDANO_PORT}
+CUSTOM_PEERS=${CARDANO_CUSTOM_PEERS}
+GENESIS_JSON=${CARDANO_CONFIG_BASE}/mainnet-shelley-genesis.json
+LOG_DIR=${CARDANO_LOG_DIR}
+TOPOLOGY=${CARDANO_TOPOLOGY}
+EOF
+
+mkdir -p $(dirname ${CARDANO_SOCKET_PATH})
+
+if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
+	effopts=(--config ${CARDANO_CONFIG} \
+		--database-path ${CARDANO_DATABASE_PATH} \
+		--host-addr ${CARDANO_BIND_ADDR} \
+		--port ${CARDANO_PORT} \
+		--shelley-kes-key ${CARDANO_SHELLEY_KES_KEY} \
+		--shelley-operational-certificate ${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE} \
+		--shelley-vrf-key ${CARDANO_SHELLEY_VRF_KEY} \
+		--socket-path ${CARDANO_SOCKET_PATH} \
+		--topology ${CARDANO_TOPOLOGY})
+else
+	effopts=(--config ${CARDANO_CONFIG} \
+		--database-path ${CARDANO_DATABASE_PATH} \
+		--host-addr ${CARDANO_BIND_ADDR} \
+		--port ${CARDANO_PORT} \
+		--socket-path ${CARDANO_SOCKET_PATH} \
+		--topology ${CARDANO_TOPOLOGY})
+fi
+effopts+=(${options[@]})
+echo cardano-node run ${effopts[@]}
+exec /usr/local/bin/cardano-node run ${effopts[@]}

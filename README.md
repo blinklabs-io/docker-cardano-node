@@ -1,2 +1,2 @@
 # docker-cardano-node
-Wrapper Dockerfile
+Builds a cardano-node on debian
