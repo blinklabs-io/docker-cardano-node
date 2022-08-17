@@ -8,16 +8,16 @@ WORKDIR /code
 # system dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && \
-  apt-get install -y dpkg && \
   apt-get install -y \
     automake \
     build-essential \
     pkg-config \
     libffi-dev \
     libgmp-dev \
+    libnuma-dev \
     libssl-dev \
-    libtinfo-dev \
     libsystemd-dev \
+    libtinfo-dev \
     zlib1g-dev \
     make \
     g++ \
