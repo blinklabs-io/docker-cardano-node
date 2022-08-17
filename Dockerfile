@@ -6,7 +6,9 @@ ARG NODE_VERSION=1.34.1
 WORKDIR /code
 
 # system dependencies
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && \
+  apt-get install -y dpkg && \
   apt-get install -y \
     automake \
     build-essential \
@@ -30,18 +32,18 @@ RUN apt-get update -y && \
 # cabal
 ENV CABAL_VERSION=${CABAL_VERSION}
 ENV PATH="/root/.cabal/bin:/root/.ghcup/bin:/root/.local/bin:$PATH"
-RUN wget https://downloads.haskell.org/~cabal/cabal-install-${CABAL_VERSION}/cabal-install-${CABAL_VERSION}-x86_64-linux-deb10.tar.xz \
-    && tar -xf cabal-install-${CABAL_VERSION}-x86_64-linux-deb10.tar.xz \
-    && rm cabal-install-${CABAL_VERSION}-x86_64-linux-deb10.tar.xz \
+RUN wget https://downloads.haskell.org/~cabal/cabal-install-${CABAL_VERSION}/cabal-install-${CABAL_VERSION}-$(uname -m)-linux-deb10.tar.xz \
+    && tar -xf cabal-install-${CABAL_VERSION}-$(uname -m)-linux-deb10.tar.xz \
+    && rm cabal-install-${CABAL_VERSION}-$(uname -m)-linux-deb10.tar.xz \
     && mkdir -p ~/.local/bin \
     && mv cabal ~/.local/bin/ \
     && cabal update && cabal --version
 
 # GHC
 ENV GHC_VERSION=${GHC_VERSION}
-RUN wget https://downloads.haskell.org/ghc/${GHC_VERSION}/ghc-${GHC_VERSION}-x86_64-deb9-linux.tar.xz \
-    && tar -xf ghc-${GHC_VERSION}-x86_64-deb9-linux.tar.xz \
-    && rm ghc-${GHC_VERSION}-x86_64-deb9-linux.tar.xz \
+RUN wget https://downloads.haskell.org/~ghc/${GHC_VERSION}/ghc-${GHC_VERSION}-$(uname -m)-deb10-linux.tar.xz \
+    && tar -xf ghc-${GHC_VERSION}-$(uname -m)-deb10-linux.tar.xz \
+    && rm ghc-${GHC_VERSION}-$(uname -m)-deb10-linux.tar.xz \
     && cd ghc-${GHC_VERSION} \
     && ./configure \
     && make install
