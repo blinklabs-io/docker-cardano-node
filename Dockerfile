@@ -18,6 +18,7 @@ RUN apt-get update -y && \
     libssl-dev \
     libsystemd-dev \
     libtinfo-dev \
+    llvm-dev \
     zlib1g-dev \
     make \
     g++ \
