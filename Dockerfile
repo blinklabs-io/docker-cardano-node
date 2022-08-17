@@ -19,7 +19,10 @@ RUN apt-get update -y && \
     zlib1g-dev \
     make \
     g++ \
+    tmux \
     git \
+    jq \
+    wget \
     libncursesw5 \
     libtool \
     autoconf
@@ -77,12 +80,17 @@ RUN echo "Building tags/${NODE_VERSION}..." \
 
 FROM debian:stable-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+COPY --from=builder /usr/local/lib/ /usr/local/lib/
+COPY --from=builder /usr/local/include/ /usr/local/include/
+COPY --from=builder /root/.local/bin/cardano-* /usr/local/bin/
+COPY bin/ /usr/local/bin/
+COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
   apt-get install -y \
     libgmp10 \
     libncursesw5 \
     zlib1g && \
+  chmod +x /usr/local/bin/* && \
   rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/local/lib/ /usr/local/lib/
-COPY --from=builder /usr/local/include/ /usr/local/include/
-COPY --from=builder /root/.local/bin/cardano-* /usr/local/bin/
+EXPOSE 3001 12798
+ENTRYPOINT ["/usr/local/bin/entrypoint"]
