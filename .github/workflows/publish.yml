@@ -100,6 +100,6 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
       - name: manifest
-        run: docker manifest create ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }} --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}-amd64 --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}-arm64v8
+        run: docker manifest create ${{ steps.meta.outputs.tags }} --amend ${{ steps.meta.outputs.tags }}-amd64 --amend ${{ steps.meta.outputs.tags }}-arm64v8
       - name: push
-        run: docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
+        run: docker manifest push ${{ steps.meta.outputs.tags }}
