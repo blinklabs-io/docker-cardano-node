@@ -74,8 +74,8 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && echo "  flags: -external-libsodium-vrf" >>  cabal.project.local \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
-    && cp -p dist-newstyle/build/x86_64-linux/ghc-$GHC_VERSION/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
-    && cp -p dist-newstyle/build/x86_64-linux/ghc-$GHC_VERSION/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
+    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
+    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
     && rm -rf /usr/local/lib/ghc-8.10.7/ /usr/local/share/doc/ghc-8.10.7/ \
     && rm -rf /cardano-node/dist-newstyle/ \
