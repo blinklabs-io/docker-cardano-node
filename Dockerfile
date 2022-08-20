@@ -83,6 +83,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
 
 FROM debian:stable-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /usr/local/include/ /usr/local/include/
 COPY --from=builder /root/.local/bin/cardano-* /usr/local/bin/
@@ -90,9 +91,15 @@ COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
   apt-get install -y \
+    libffi7 \
     libgmp10 \
     libncursesw5 \
     libnuma1 \
+    libsystemd0 \
+    libssl1.1 \
+    libtinfo6 \
+    llvm-11-runtime \
+    pkg-config \
     zlib1g && \
   chmod +x /usr/local/bin/* && \
   rm -rf /var/lib/apt/lists/*
