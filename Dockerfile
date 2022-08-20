@@ -92,8 +92,9 @@ RUN apt-get update -y && \
   apt-get install -y \
     libgmp10 \
     libncursesw5 \
+    libnuma1 \
     zlib1g && \
   chmod +x /usr/local/bin/* && \
   rm -rf /var/lib/apt/lists/*
-EXPOSE 3001 12798
+EXPOSE 3001 12788 12798
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
