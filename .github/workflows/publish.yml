@@ -31,6 +31,8 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=schedule,suffix=-amd64
             type=ref,event=branch,suffix=-amd64
@@ -63,6 +65,8 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
           tags: |
             type=schedule,suffix=-arm64v8
             type=ref,event=branch,suffix=-arm64v8
