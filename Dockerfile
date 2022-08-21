@@ -1,7 +1,7 @@
 FROM debian:stable-slim as builder
 ARG CABAL_VERSION=3.6.2.0
 ARG GHC_VERSION=8.10.7
-ARG NODE_VERSION=1.34.1
+ARG NODE_VERSION=1.35.3
 
 WORKDIR /code
 
@@ -59,6 +59,15 @@ RUN git clone https://github.com/input-output-hk/libsodium && \
     make install
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+
+# secp256k1
+RUN git clone https://github.com/bitcoin-core/secp256k1 && \
+    cd secp256k1 && \
+    git checkout ac83be33 && \
+    ./autogen.sh && \
+    ./configure --enable-module-schnorrsig --enable-experimental && \
+    make && \
+    make install
 
 # Install cardano-node
 ENV NODE_VERSION=${NODE_VERSION}
