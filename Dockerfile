@@ -1,7 +1,6 @@
 FROM debian:stable-slim as builder
 ARG CABAL_VERSION=3.6.2.0
 ARG GHC_VERSION=8.10.7
-ARG NODE_VERSION=1.35.3
 
 WORKDIR /code
 
@@ -69,7 +68,9 @@ RUN git clone https://github.com/bitcoin-core/secp256k1 && \
     make && \
     make install
 
+FROM builder as cardano-node-build
 # Install cardano-node
+ARG NODE_VERSION=1.35.3
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
@@ -93,9 +94,9 @@ RUN echo "Building tags/${NODE_VERSION}..." \
 FROM debian:stable-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
-COPY --from=builder /usr/local/lib/ /usr/local/lib/
-COPY --from=builder /usr/local/include/ /usr/local/include/
-COPY --from=builder /root/.local/bin/cardano-* /usr/local/bin/
+COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
+COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
+COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
