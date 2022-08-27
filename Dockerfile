@@ -88,7 +88,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
     && rm -rf /usr/local/lib/ghc-8.10.7/ /usr/local/share/doc/ghc-8.10.7/ \
-    && rm -rf /cardano-node/dist-newstyle/ \
+    && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-8.10.7
 
 FROM debian:stable-slim as cardano-node
