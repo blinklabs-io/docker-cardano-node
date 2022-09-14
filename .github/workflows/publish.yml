@@ -47,8 +47,8 @@ jobs:
             latest=false
             suffix=-amd64
           tags: |
-            # full tag minus v
-            type=match,pattern=v(.*),group=1
+            # Only version, no revision
+            type=match,pattern=v(.*)-(.*),group=1
             # branch
             type=ref,event=branch
             # semver
@@ -105,8 +105,8 @@ jobs:
             latest=false
             suffix=-arm64v8
           tags: |
-            # full tag minus v
-            type=match,pattern=v(.*),group=1
+            # Only version, no revision
+            type=match,pattern=v(.*)-(.*),group=1
             # branch
             type=ref,event=branch
             # semver
