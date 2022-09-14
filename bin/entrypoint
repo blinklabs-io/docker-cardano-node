@@ -7,7 +7,7 @@ if [[ -n ${NETWORK} ]]; then
 fi
 case ${1} in
 	run) exec /usr/local/bin/run-node ${@} ;;
-	cli) exec /usr/local/bin/run-cli ${@} ;;
+	cli) exec /usr/local/bin/run-client ${@} ;;
 	*) echo "Nothing to do! Perhaps try [run|cli], or set NETWORK environment variable."; exit 1 ;;
 esac
 
