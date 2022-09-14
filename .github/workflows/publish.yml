@@ -169,8 +169,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            # full tag minus v
-            type=match,pattern=v(.*),group=1
+            # Only version, no revision
+            type=match,pattern=v(.*)-(.*),group=1
       - id: meta-ghcr
         name: Metadata - GHCR
         uses: docker/metadata-action@v3
@@ -192,8 +192,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            # full tag minus v
-            type=match,pattern=v(.*),group=1
+            # Only version, no revision
+            type=match,pattern=v(.*)-(.*),group=1
       # Manifest for either branch or semver
       - name: manifest-dockerhub
         run: docker manifest create ${{ steps.meta-dockerhub.outputs.tags }} --amend ${{ steps.meta-dockerhub.outputs.tags }}-amd64 --amend ${{ steps.meta-dockerhub.outputs.tags }}-arm64v8
@@ -225,10 +225,10 @@ jobs:
         run: docker manifest push ghcr.io/${{ env.IMAGE_NAME }}:latest
         if: startsWith(github.ref, 'refs/tags/')
       - name: push-dockerhub-tags
-        run: docker manifest push ${{ steps.meta-dockerhub-tags.outputs.tags }}
+        run: docker manifest push ${{ steps.meta-dockerhub-tag.outputs.tags }}
         if: startsWith(github.ref, 'refs/tags/')
       - name: push-ghcr-tags
-        run: docker manifest push ${{ steps.meta-ghcr-tags.outputs.tags }}
+        run: docker manifest push ${{ steps.meta-ghcr-tag.outputs.tags }}
         if: startsWith(github.ref, 'refs/tags/')
       # Update Docker Hub from README
       - name: Docker Hub Description
