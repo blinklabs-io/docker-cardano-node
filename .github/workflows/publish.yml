@@ -36,9 +36,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-${{ runner.arch }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-${{ runner.arch }}-buildx-
       - id: meta
         uses: docker/metadata-action@v3
         with:
@@ -94,9 +94,9 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-${{ runner.arch }}-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            ${{ runner.os }}-${{ runner.arch }}-buildx-
       - id: meta
         uses: docker/metadata-action@v3
         with:
