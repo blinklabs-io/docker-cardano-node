@@ -70,7 +70,7 @@ RUN git clone https://github.com/bitcoin-core/secp256k1 && \
 
 FROM builder as cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=1.35.3
+ARG NODE_VERSION=1.35.4-rc1
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
