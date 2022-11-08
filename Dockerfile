@@ -13,7 +13,9 @@ RUN apt-get update -y && \
     pkg-config \
     libffi-dev \
     libgmp-dev \
+    liblmdb-dev \
     libnuma-dev \
+    libsodium-dev \
     libssl-dev \
     libsystemd-dev \
     libtinfo-dev \
@@ -47,17 +49,6 @@ RUN wget https://downloads.haskell.org/~ghc/${GHC_VERSION}/ghc-${GHC_VERSION}-$(
     && cd ghc-${GHC_VERSION} \
     && ./configure \
     && make install
-
-# Libsodium
-RUN git clone https://github.com/input-output-hk/libsodium && \
-    cd libsodium && \
-    git checkout 66f017f1 && \
-    ./autogen.sh && \
-    ./configure && \
-    make && \
-    make install
-ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
-ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 
 # secp256k1
 RUN git clone https://github.com/bitcoin-core/secp256k1 && \
@@ -103,10 +94,12 @@ RUN apt-get update -y && \
   apt-get install -y \
     libffi7 \
     libgmp10 \
+    liblmdb0 \
     libncursesw5 \
     libnuma1 \
-    libsystemd0 \
+    libsodium23 \
     libssl1.1 \
+    libsystemd0 \
     libtinfo6 \
     llvm-11-runtime \
     pkg-config \
