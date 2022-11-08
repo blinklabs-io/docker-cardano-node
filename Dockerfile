@@ -73,6 +73,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && cabal configure --with-compiler=ghc-$GHC_VERSION \
     && echo "package cardano-crypto-praos" >>  cabal.project.local \
     && echo "  flags: -external-libsodium-vrf" >>  cabal.project.local \
+    && cabal update \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
     && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
