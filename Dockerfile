@@ -80,7 +80,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && git fetch --all --recurse-submodules --tags \
     && git tag \
     && git checkout tags/${NODE_VERSION} \
-    && echo "with-compiler: ghc-8.10.7" >> cabal.project.local \
+    && echo "with-compiler: ghc-${GHC_VERSION}" >> cabal.project.local \
     && echo "package cardano-crypto-praos" >> cabal.project.local \
     && echo "  flags: -external-libsodium-vrf" >> cabal.project.local \
     && echo "tests: False" >> cabal.project.local \
