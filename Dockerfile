@@ -13,6 +13,7 @@ RUN apt-get update -y && \
     pkg-config \
     libffi-dev \
     libgmp-dev \
+    liblmdb-dev \
     libnuma-dev \
     libssl-dev \
     libsystemd-dev \
@@ -70,7 +71,7 @@ RUN git clone https://github.com/bitcoin-core/secp256k1 && \
 
 FROM builder as cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=1.35.3
+ARG NODE_VERSION=1.35.4
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
@@ -79,9 +80,11 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && git fetch --all --recurse-submodules --tags \
     && git tag \
     && git checkout tags/${NODE_VERSION} \
-    && cabal configure --with-compiler=ghc-$GHC_VERSION \
-    && echo "package cardano-crypto-praos" >>  cabal.project.local \
-    && echo "  flags: -external-libsodium-vrf" >>  cabal.project.local \
+    && echo "with-compiler: ghc-${GHC_VERSION}" >> cabal.project.local \
+    && echo "package cardano-crypto-praos" >> cabal.project.local \
+    && echo "  flags: -external-libsodium-vrf" >> cabal.project.local \
+    && echo "tests: False" >> cabal.project.local \
+    && cabal update \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
     && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
@@ -103,6 +106,7 @@ RUN apt-get update -y && \
   apt-get install -y \
     libffi7 \
     libgmp10 \
+    liblmdb0 \
     libncursesw5 \
     libnuma1 \
     libsystemd0 \
