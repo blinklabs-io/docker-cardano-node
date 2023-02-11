@@ -69,6 +69,15 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      # TEMP fix
+      # Something strange is happening with the manifests when we push which
+      # breaks the downstream multi-arch-manifest, so pull and push to work
+      # around this by resubmitting manifests
+      - name: pull-and-push
+        run: |
+          for t in `echo '${{ steps.meta.outputs.tags }}'`; do
+            docker pull $t && docker push $t
+          done
 
   build-arm64:
     runs-on: self-hosted
@@ -127,6 +136,15 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      # TEMP fix
+      # Something strange is happening with the manifests when we push which
+      # breaks the downstream multi-arch-manifest, so pull and push to work
+      # around this by resubmitting manifests
+      - name: pull-and-push
+        run: |
+          for t in `echo '${{ steps.meta.outputs.tags }}'`; do
+            docker pull $t && docker push $t
+          done
 
   multi-arch-manifest:
     runs-on: ubuntu-latest
