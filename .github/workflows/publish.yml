@@ -245,12 +245,12 @@ jobs:
 
       - name: manifest-dockerhub
         run: |
-          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'; do
+          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
           done
       - name: manifest-dockerhub-tags
         run: |
-          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'; do
+          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
             docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
           done
