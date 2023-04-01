@@ -222,42 +222,43 @@ jobs:
 
       # Manifest for either branch or semver
       - name: manifest-ghcr
-        run: docker manifest create ${{ steps.meta-ghcr.outputs.tags }} --amend ${{ steps.meta-ghcr.outputs.tags }}-amd64 --amend ${{ steps.meta-ghcr.outputs.tags }}-arm64v8
-      # Optional manifest for latest
-      - name: manifest-ghcr-latest
-        run: docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${{ steps.meta-ghcr.outputs.tags }}-amd64 --amend ${{ steps.meta-ghcr.outputs.tags }}-arm64v8
-        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'; do
+            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+          done
       # Optional manifest for tag versions (includes revisions)
       - name: manifest-ghcr-tags
-        run: docker manifest create ${{ steps.meta-ghcr-tag.outputs.tags }} --amend ${{ steps.meta-ghcr-tag.outputs.tags }}-amd64 --amend ${{ steps.meta-ghcr-tag.outputs.tags }}-arm64v8
+        run: |
+          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'; do
+            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+            docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
+          done
         if: startsWith(github.ref, 'refs/tags/')
       # Push various manifests
       - name: push-ghcr
         run: docker manifest push ${{ steps.meta-ghcr.outputs.tags }}
-      - name: push-ghcr-latest
-        run: docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest
-        if: startsWith(github.ref, 'refs/tags/')
       - name: push-ghcr-tags
-        run: docker manifest push ${{ steps.meta-ghcr-tag.outputs.tags }}
+        run: docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest ${{ steps.meta-ghcr-tag.outputs.tags }}
         if: startsWith(github.ref, 'refs/tags/')
 
       # Now, create manifests for Docker Hub
 
       - name: manifest-dockerhub
-        run: docker manifest create ${{ steps.meta-dockerhub.outputs.tags }} --amend ${{ steps.meta-dockerhub.outputs.tags }}-amd64 --amend ${{ steps.meta-dockerhub.outputs.tags }}-arm64v8
-      - name: manifest-dockerhub-latest
-        run: docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${{ steps.meta-dockerhub.outputs.tags }}-amd64 --amend ${{ steps.meta-dockerhub.outputs.tags }}-arm64v8
-        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'; do
+            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+          done
       - name: manifest-dockerhub-tags
-        run: docker manifest create ${{ steps.meta-dockerhub-tag.outputs.tags }} --amend ${{ steps.meta-dockerhub-tag.outputs.tags }}-amd64 --amend ${{ steps.meta-dockerhub-tag.outputs.tags }}-arm64v8
+        run: |
+          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'; do
+            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+            docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
+          done
         if: startsWith(github.ref, 'refs/tags/')
       - name: push-dockerhub
         run: docker manifest push ${{ steps.meta-dockerhub.outputs.tags }}
-      - name: push-dockerhub-latest
-        run: docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest
-        if: startsWith(github.ref, 'refs/tags/')
       - name: push-dockerhub-tags
-        run: docker manifest push ${{ steps.meta-dockerhub-tag.outputs.tags }}
+        run: docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest ${{ steps.meta-dockerhub-tag.outputs.tags }}
         if: startsWith(github.ref, 'refs/tags/')
 
       # Update Docker Hub from README
