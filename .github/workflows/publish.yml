@@ -223,13 +223,13 @@ jobs:
       # Manifest for either branch or semver
       - name: manifest-ghcr
         run: |
-          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'; do
+          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
           done
       # Optional manifest for tag versions (includes revisions)
       - name: manifest-ghcr-tags
         run: |
-          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'; do
+          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
             docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
           done
