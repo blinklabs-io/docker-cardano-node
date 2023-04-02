@@ -236,9 +236,16 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
       # Push various manifests
       - name: push-ghcr
-        run: docker manifest push ${{ steps.meta-ghcr.outputs.tags }}
+        run: |
+          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
+            docker manifest push ${t}
+          done
       - name: push-ghcr-tags
-        run: docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest ${{ steps.meta-ghcr-tag.outputs.tags }}
+        run: |
+          docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest
+          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
+            docker manifest push ${t}
+          done
         if: startsWith(github.ref, 'refs/tags/')
 
       # Now, create manifests for Docker Hub
@@ -256,9 +263,16 @@ jobs:
           done
         if: startsWith(github.ref, 'refs/tags/')
       - name: push-dockerhub
-        run: docker manifest push ${{ steps.meta-dockerhub.outputs.tags }}
+        run: |
+          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
+            docker manifest push ${t}
+          done
       - name: push-dockerhub-tags
-        run: docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest ${{ steps.meta-dockerhub-tag.outputs.tags }}
+        run: |
+          docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest
+          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
+            docker manifest push ${t}
+          done
         if: startsWith(github.ref, 'refs/tags/')
 
       # Update Docker Hub from README
