@@ -16,12 +16,12 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && cabal update \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
-    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
-    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-$GHC_VERSION/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
+    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-${GHC_VERSION}/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
+    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-${GHC_VERSION}/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
-    && rm -rf /usr/local/lib/ghc-8.10.7/ /usr/local/share/doc/ghc-8.10.7/ \
+    && rm -rf /usr/local/lib/ghc-${GHC_VERSION}/ /usr/local/share/doc/ghc-${GHC_VERSION}/ \
     && rm -rf /code/cardano-node/dist-newstyle/ \
-    && rm -rf /root/.cabal/store/ghc-8.10.7
+    && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
 FROM debian:stable-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
@@ -33,6 +33,10 @@ COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
   apt-get install -y \
+    bc \
+    curl \
+    iproute2 \
+    jq \
     libffi7 \
     libgmp10 \
     liblmdb0 \
@@ -43,8 +47,22 @@ RUN apt-get update -y && \
     libtinfo6 \
     llvm-11-runtime \
     pkg-config \
+    procps \
     zlib1g && \
-  chmod +x /usr/local/bin/* && \
   rm -rf /var/lib/apt/lists/*
+RUN curl -sLo /usr/local/bin/gLiveView.sh \
+  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/gLiveView.sh && \
+  curl -sL \
+  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/env | \
+  sed \
+    -e "s|#CNODE_HOME=.*|CNODE_HOME=/opt/cardano |" \
+    -e "s|#CNODE_PORT=.*|CNODE_PORT=\${CARDANO_PORT:-3001} |" \
+    -e "s|#CONFIG=.*|CONFIG=\${CARDANO_CONFIG:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-config.json} |" \
+    -e "s|#SOCKET=.*|SOCKET=\${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket} |" \
+    -e "s|#TOPOLOGY=.*|TOPOLOGY=\${CARDANO_TOPOLOGY:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-topology.json} |" \
+    -e "s|#LOG_DIR=.*|LOG_DIR=\${CARDANO_LOG_DIR:-/opt/cardano/logs} |" \
+    -e "s|#DB_DIR=.*|DB_DIR=\${CARDANO_DATABASE_PATH:-/opt/cardano/data} |" > \
+    /usr/local/bin/env && \
+  chmod +x /usr/local/bin/*
 EXPOSE 3001 12788 12798
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
