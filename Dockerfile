@@ -57,9 +57,9 @@ RUN curl -sLo /usr/local/bin/gLiveView.sh \
   sed \
     -e "s|#CNODE_HOME=.*|CNODE_HOME=/opt/cardano |" \
     -e "s|#CNODE_PORT=.*|CNODE_PORT=\${CARDANO_PORT:-3001} |" \
-    -e "s|#CONFIG=.*|CONFIG=\${CARDANO_CONFIG:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-config.json} |" \
+    -e "s|#CONFIG=.*|CONFIG=\${CARDANO_CONFIG:-/opt/cardano/config/\${CARDANO_NETWORK:-\${NETWORK:-mainnet}}/config.json} |" \
     -e "s|#SOCKET=.*|SOCKET=\${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket} |" \
-    -e "s|#TOPOLOGY=.*|TOPOLOGY=\${CARDANO_TOPOLOGY:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-topology.json} |" \
+    -e "s|#TOPOLOGY=.*|TOPOLOGY=\${CARDANO_TOPOLOGY:-/opt/cardano/config/\${CARDANO_NETWORK:-\${NETWORK:-mainnet}}/topology.json} |" \
     -e "s|#LOG_DIR=.*|LOG_DIR=\${CARDANO_LOG_DIR:-/opt/cardano/logs} |" \
     -e "s|#DB_DIR=.*|DB_DIR=\${CARDANO_DATABASE_PATH:-/opt/cardano/data} |" > \
     /usr/local/bin/env && \

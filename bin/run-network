@@ -13,12 +13,12 @@ case ${NETWORK} in
 esac
 
 echo "Starting: /usr/local/bin/cardano-node run"
-echo "--config /opt/cardano/config/${NETWORK}-config.json"
+echo "--config /opt/cardano/config/${NETWORK}/config.json"
 echo "--database-path /data/db"
 echo "--host-addr 0.0.0.0"
 echo "--port 3001"
 echo "--socket-path /ipc/node.socket"
-echo "--topology /opt/cardano/config/${NETWORK}-topology.json"
+echo "--topology /opt/cardano/config/${NETWORK}/topology.json"
 echo "+RTS"
 echo "-N2"
 echo "-I0"
@@ -28,5 +28,5 @@ echo "-qb"
 echo "--disable-delayed-os-memory-return"
 echo "-RTS"
 echo "..or, once again, in a single line:"
-echo "/usr/local/bin/cardano-node run --config /opt/cardano/config/${NETWORK}-config.json --database-path /data/db --host-addr 0.0.0.0 --port 3001 --socket-path /ipc/node.socket --topology /opt/cardano/config/${NETWORK}-topology.json +RTS -N2 -I0 -A16m -qg -qb --disable-delayed-os-memory-return -RTS"
-exec /usr/local/bin/cardano-node run --config /opt/cardano/config/${NETWORK}-config.json --database-path /data/db --host-addr 0.0.0.0 --port 3001 --socket-path /ipc/node.socket --topology /opt/cardano/config/${NETWORK}-topology.json +RTS -N2 -I0 -A16m -qg -qb --disable-delayed-os-memory-return -RTS ${@}
+echo "/usr/local/bin/cardano-node run --config /opt/cardano/config/${NETWORK}/config.json --database-path /data/db --host-addr 0.0.0.0 --port 3001 --socket-path /ipc/node.socket --topology /opt/cardano/config/${NETWORK}/topology.json +RTS -N2 -I0 -A16m -qg -qb --disable-delayed-os-memory-return -RTS"
+exec /usr/local/bin/cardano-node run --config /opt/cardano/config/${NETWORK}/config.json --database-path /data/db --host-addr 0.0.0.0 --port 3001 --socket-path /ipc/node.socket --topology /opt/cardano/config/${NETWORK}/topology.json +RTS -N2 -I0 -A16m -qg -qb --disable-delayed-os-memory-return -RTS ${@}
