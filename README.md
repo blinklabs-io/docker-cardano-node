@@ -63,7 +63,7 @@ This behavior can be changes via the following environment variables:
   - Requires key files and node certificates to be present to start
 - `CARDANO_CONFIG`
   - Full path to the Cardano node configuration (default:
-    `${CARDANO_CONFIG_BASE}/mainnet-config.json`)
+    `${CARDANO_CONFIG_BASE}/mainnet/config.json`)
   - Use your own configuration file to modify the node behavior fully
 - `CARDANO_DATABASE_PATH`
   - A directory which contains the ledger database files (default:
