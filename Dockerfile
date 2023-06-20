@@ -1,6 +1,6 @@
-FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.6.2.0-2 as cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.8.1.0-1 as cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=8.0.0
+ARG NODE_VERSION=8.1.1
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
@@ -38,15 +38,15 @@ RUN apt-get update -y && \
     curl \
     iproute2 \
     jq \
-    libffi7 \
+    libffi8 \
     libgmp10 \
     liblmdb0 \
     libncursesw5 \
     libnuma1 \
     libsystemd0 \
-    libssl1.1 \
+    libssl3 \
     libtinfo6 \
-    llvm-11-runtime \
+    llvm-14-runtime \
     pkg-config \
     procps \
     zlib1g && \
