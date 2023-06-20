@@ -38,15 +38,15 @@ RUN apt-get update -y && \
     curl \
     iproute2 \
     jq \
-    libffi7 \
+    libffi8 \
     libgmp10 \
     liblmdb0 \
     libncursesw5 \
     libnuma1 \
     libsystemd0 \
-    libssl1.1 \
+    libssl3 \
     libtinfo6 \
-    llvm-11-runtime \
+    llvm-14-runtime \
     pkg-config \
     procps \
     zlib1g && \
