@@ -23,7 +23,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM debian:stable-slim as cardano-node
+FROM debian:bookworm-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
@@ -47,6 +47,7 @@ RUN apt-get update -y && \
     libssl3 \
     libtinfo6 \
     llvm-14-runtime \
+    netbase \
     pkg-config \
     procps \
     zlib1g && \
