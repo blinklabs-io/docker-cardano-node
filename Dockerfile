@@ -30,6 +30,7 @@ COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/nview:0.1.0 /usr/local/bin/nview /usr/local/bin/
+COPY --from=ghcr.io/input-output-hk/mithril-client:2335.0-a6caa1c /app/bin/mithril-client /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
@@ -50,6 +51,8 @@ RUN apt-get update -y && \
     netbase \
     pkg-config \
     procps \
+    sqlite3 \
+    wget \
     zlib1g && \
   rm -rf /var/lib/apt/lists/*
 RUN curl -sLo /usr/local/bin/gLiveView.sh \
