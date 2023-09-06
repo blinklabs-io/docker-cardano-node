@@ -42,6 +42,11 @@ CARDANO_PORT=${CARDANO_PORT:-3001}
 CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS:--N2 -A64m -I0 -qg -qb --disable-delayed-os-memory-return}
 CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket}
 CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY:-${CARDANO_CONFIG_BASE}/${CARDANO_NETWORK}/topology.json}
+# mithril
+AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT:-https://aggregator.release-${CARDANO_NETWORK}.api.mithril.network/aggregator}
+GENESIS_VERIFICATION_KEY=${GENESIS_VERIFICATION_KEY:-$(<${CARDANO_CONFIG_BASE}/${CARDANO_NETWORK}/genesis.vkey)}
+SNAPSHOT_DIGEST=${SNAPSHOT_DIGEST:-latest}
+RESTORE_SNAPSHOT=${RESTORE_SNAPSHOT:-true}
 
 echo CARDANO_BIND_ADDR=${CARDANO_BIND_ADDR}
 echo CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER}
@@ -64,7 +69,36 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	echo CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE}
 fi
 
+if [[ ${CARDANO_NETWORK} == preview ]]; then
+	if [[ ${RESTORE_SNAPSHOT} == true ]]; then
+		echo "Mithril not supported on preview... skipping"
+	fi
+	RESTORE_SNAPSHOT=false
+fi
+
+echo AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT}
+echo GENESIS_VERIFICATION_KEY=${GENESIS_VERIFICATION_KEY}
+echo SNAPSHOT_DIGEST=${SNAPSHOT_DIGEST}
+echo RESTORE_SNAPSHOT=${RESTORE_SNAPSHOT}
+
 mkdir -p $(dirname ${CARDANO_SOCKET_PATH})
+
+# Mithril
+if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
+	echo "Detected empty ${CARDANO_DATABASE_PATH}"
+	if [[ ${RESTORE_SNAPSHOT} == true ]]; then
+		mkdir -p ${CARDANO_DATABASE_PATH}
+		cd $(dirname ${CARDANO_DATABASE_PATH})
+		export AGGREGATOR_ENDPOINT GENESIS_VERIFICATION_KEY SNAPSHOT_DIGEST
+		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
+		mithril-client snapshot download ${SNAPSHOT_DIGEST}
+		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
+			mv -f db/* ${CARDANO_DATABASE_PATH}/
+		fi
+	fi
+elif [[ ${RESTORE_SNAPSHOT} == true ]]; then
+	echo "Detected populated ${CARDANO_DATABASE_PATH}... skipping restore"
+fi
 
 if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	effopts=(--config ${CARDANO_CONFIG} \
