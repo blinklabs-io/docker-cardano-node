@@ -13,7 +13,7 @@ case ${NETWORK} in
 esac
 
 # Mithril
-if ! test -e /data/db; then
+if ! test -e /data/db/protocolMagicId; then
 	if [[ ${NETWORK} != preview ]]; then
 		__base=https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration
 		__url=${__base}/release-${NETWORK}
