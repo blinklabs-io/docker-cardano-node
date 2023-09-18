@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
-shift
+if [[ ${1} == cli ]]; then
+	shift
+fi
 if [[ -n ${NETWORK} ]]; then
-	export CARDANO_NODE_SOCKET_PATH=/ipc/node.socket
+	export CARDANO_NODE_SOCKET_PATH=${CARDANO_NODE_SOCKET_PATH:-/ipc/node.socket}
 else
 	export CARDANO_NODE_SOCKET_PATH=${CARDANO_NODE_SOCKET_PATH:-/opt/cardano/ipc/socket}
 fi
