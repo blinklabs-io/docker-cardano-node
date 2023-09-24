@@ -2,13 +2,16 @@
 
 set -e
 
+if [[ -n ${NETWORK} ]]; then
+	if [[ ${1} == cli ]]; then
+		exec /usr/local/bin/run-client ${@}
+	else
+		exec /usr/local/bin/run-network ${@}
+	fi
+fi
+
 case ${1} in
 	run) exec /usr/local/bin/run-node ${@} ;;
 	cli) exec /usr/local/bin/run-client ${@} ;;
+	*) echo "Nothing to do! Perhaps try [run|cli], or set NETWORK environment variable."; exit 1 ;;
 esac
-if [[ -n ${NETWORK} ]]; then
-	exec /usr/local/bin/run-network ${@}
-fi
-
-echo "Nothing to do! Perhaps try [run|cli], or set NETWORK environment variable."
-exit 1
