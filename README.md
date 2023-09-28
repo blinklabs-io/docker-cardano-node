@@ -161,7 +161,7 @@ before following.
 The power in using `run` is being able to configure the node's behavior to
 provide the correct type of service.
 
-This behavior can be changes via the following environment variables:
+This behavior can be changed via the following environment variables:
 
 - `CARDANO_CONFIG_BASE`
   - A directory which contains configuration files (default:
