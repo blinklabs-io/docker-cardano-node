@@ -54,20 +54,7 @@ RUN apt-get update -y && \
     sqlite3 \
     wget \
     zlib1g && \
-  rm -rf /var/lib/apt/lists/*
-RUN curl -sLo /usr/local/bin/gLiveView.sh \
-  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/gLiveView.sh && \
-  curl -sL \
-  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/env | \
-  sed \
-    -e "s|#CNODE_HOME=.*|CNODE_HOME=/opt/cardano |" \
-    -e "s|#CNODE_PORT=.*|CNODE_PORT=\${CARDANO_PORT:-3001} |" \
-    -e "s|#CONFIG=.*|CONFIG=\${CARDANO_CONFIG:-/opt/cardano/config/\${CARDANO_NETWORK:-\${NETWORK:-mainnet}}/config.json} |" \
-    -e "s|#SOCKET=.*|SOCKET=\${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket} |" \
-    -e "s|#TOPOLOGY=.*|TOPOLOGY=\${CARDANO_TOPOLOGY:-/opt/cardano/config/\${CARDANO_NETWORK:-\${NETWORK:-mainnet}}/topology.json} |" \
-    -e "s|#LOG_DIR=.*|LOG_DIR=\${CARDANO_LOG_DIR:-/opt/cardano/logs} |" \
-    -e "s|#DB_DIR=.*|DB_DIR=\${CARDANO_DATABASE_PATH:-/opt/cardano/data} |" > \
-    /usr/local/bin/env && \
+  rm -rf /var/lib/apt/lists/* && \
   chmod +x /usr/local/bin/*
 EXPOSE 3001 12788 12798
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
