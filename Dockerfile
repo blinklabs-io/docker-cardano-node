@@ -1,6 +1,6 @@
-FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.8.1.0-1 as cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:9.6.3-3.10.2.0-1 AS cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=8.1.2
+ARG NODE_VERSION=8.7.2
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
@@ -10,25 +10,23 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && git tag \
     && git checkout tags/${NODE_VERSION} \
     && echo "with-compiler: ghc-${GHC_VERSION}" >> cabal.project.local \
-    && echo "package cardano-crypto-praos" >> cabal.project.local \
-    && echo "  flags: -external-libsodium-vrf" >> cabal.project.local \
     && echo "tests: False" >> cabal.project.local \
     && cabal update \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
-    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-${GHC_VERSION}/cardano-node-${NODE_VERSION}/x/cardano-node/build/cardano-node/cardano-node /root/.local/bin/ \
-    && cp -p dist-newstyle/build/$(uname -m)-linux/ghc-${GHC_VERSION}/cardano-cli-${NODE_VERSION}/x/cardano-cli/build/cardano-cli/cardano-cli /root/.local/bin/ \
+    && cp -p "$(./scripts/bin-path.sh cardano-node)" /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
     && rm -rf /usr/local/lib/ghc-${GHC_VERSION}/ /usr/local/share/doc/ghc-${GHC_VERSION}/ \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM debian:bookworm-slim as cardano-node
+FROM debian:bookworm-slim AS cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/cardano-cli:8.17.0.0 /usr/local/bin/cardano-cli /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/mithril-client:0.5.5-1 /bin/mithril-client /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/nview:0.7.0 /bin/nview /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/txtop:0.2.1 /bin/txtop /usr/local/bin/
