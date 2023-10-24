@@ -10,12 +10,21 @@
     {
       "accessPoints": [
         {
-          "address": "relays-new.cardano-mainnet.iohk.io",
+          "address": "backbone.cardano-mainnet.iohk.io",
+          "port": 3001
+        }
+      ],
+      "advertise": false
+    },
+    {
+      "accessPoints": [
+        {
+          "address": "backbone.mainnet.emurgornd.com",
           "port": 3001
         }
       ],
       "advertise": false
     }
   ],
-  "useLedgerAfterSlot": 84916732
+  "useLedgerAfterSlot": 99532743
 }
