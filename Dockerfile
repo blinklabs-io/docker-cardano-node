@@ -29,8 +29,9 @@ ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/nview:0.6.1 /bin/nview /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/mithril-client:0.4.2-1 /bin/mithril-client /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/nview:0.6.1 /bin/nview /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/txtop:0.2.0 /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
