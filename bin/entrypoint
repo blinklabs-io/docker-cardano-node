@@ -3,32 +3,15 @@
 set -e
 
 if [[ -n ${NETWORK} ]]; then
-	exec /usr/local/bin/run-network ${@}
+	if [[ ${1} == cli ]]; then
+		exec /usr/local/bin/run-client ${@}
+	else
+		exec /usr/local/bin/run-network ${@}
+	fi
 fi
+
 case ${1} in
 	run) exec /usr/local/bin/run-node ${@} ;;
 	cli) exec /usr/local/bin/run-client ${@} ;;
 	*) echo "Nothing to do! Perhaps try [run|cli], or set NETWORK environment variable."; exit 1 ;;
 esac
-
-# variables
-CARDANO_NETWORK=${CARDANO_NETWORK:-mainnet}
-CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER:-false}
-CARDANO_CONFIG=${CARDANO_CONFIG:-/opt/cardano/config/${CARDANO_NETWORK}-config.json}
-CARDANO_DATABASE_PATH=${CARDANO_DATABASE_PATH:-/opt/cardano/db}
-CARDANO_NODE_SOCKET_PATH=${CARDANO_NODE_SOCKET_PATH:-/opt/cardano/ipc/socket}
-CARDANO_PORT=${CARDANO_PORT:-3001}
-CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS:--N2 -A64m -I0 -qg -qb --disable-delayed-os-memory-return}
-CARDANO_SHELLEY_KES_KEY=${CARDANO_SHELLEY_KES_KEY:-/opt/cardano/keys/kes.skey}
-CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE:-/opt/cardano/keys/node.cert}
-CARDANO_SHELLEY_VRF_KEY=${CARDANO_SHELLEY_VRF_KEY:-/opt/cardano/keys/vrf.skey}
-CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket}
-CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY:-/opt/cardano/config/${CARDANO_NETWORK}-topology.json}
-
-exec cardano-node \
-	--config ${CARDANO_CONFIG} \
-	--topology ${CARDANO_TOPOLOGY} \
-	--database-path ${CARDANO_DATABASE_PATH} \
-	--socket-path ${CARDANO_SOCKET_PATH} \
-	--host-addr 0.0.0.0 \
-	--port ${CARDANO_PORT}

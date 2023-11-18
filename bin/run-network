@@ -12,6 +12,23 @@ case ${NETWORK} in
 	*) echo "[Error] Managed configuration for network ${NETWORK} does not exist"; exit 1 ;;
 esac
 
+# Mithril
+if ! test -e /data/db/protocolMagicId; then
+	if [[ ${NETWORK} != preview ]]; then
+		__base=https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration
+		__url=${__base}/release-${NETWORK}
+		export GENESIS_VERIFICATION_KEY=$(curl ${__url}/genesis.vkey 2> /dev/null)
+		export AGGREGATOR_ENDPOINT=https://aggregator.release-${NETWORK}.api.mithril.network/aggregator
+		export SNAPSHOT_DIGEST=$(mithril-client snapshot list --json | jq -r '.[0].digest')
+		mkdir -p /data
+		cd /data
+		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
+		mithril-client snapshot download ${SNAPSHOT_DIGEST}
+	else
+		echo "Mithril not supported on preview... skipping"
+	fi
+fi
+
 echo "Starting: /usr/local/bin/cardano-node run"
 echo "--config /opt/cardano/config/${NETWORK}-config.json"
 echo "--database-path /data/db"
