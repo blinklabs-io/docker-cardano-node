@@ -1,4 +1,4 @@
-FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.6.2.0 as cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.6.2.0-4 as cardano-node-build
 # Install cardano-node
 ARG NODE_VERSION=1.35.7
 ENV NODE_VERSION=${NODE_VERSION}
@@ -23,12 +23,15 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM debian:stable-slim as cardano-node
+FROM debian:bookworm-slim as cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/mithril-client:0.4.2-1 /bin/mithril-client /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/nview:0.6.1 /bin/nview /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/txtop:0.2.0 /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
@@ -37,32 +40,22 @@ RUN apt-get update -y && \
     curl \
     iproute2 \
     jq \
-    libffi7 \
+    libffi8 \
     libgmp10 \
     liblmdb0 \
     libncursesw5 \
     libnuma1 \
     libsystemd0 \
-    libssl1.1 \
+    libssl3 \
     libtinfo6 \
-    llvm-11-runtime \
+    llvm-14-runtime \
+    netbase \
     pkg-config \
     procps \
+    sqlite3 \
+    wget \
     zlib1g && \
-  rm -rf /var/lib/apt/lists/*
-RUN curl -sLo /usr/local/bin/gLiveView.sh \
-  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/gLiveView.sh && \
-  curl -sL \
-  https://raw.githubusercontent.com/cardano-community/guild-operators/master/scripts/cnode-helper-scripts/env | \
-  sed \
-    -e "s|#CNODE_HOME=.*|CNODE_HOME=/opt/cardano |" \
-    -e "s|#CNODE_PORT=.*|CNODE_PORT=\${CARDANO_PORT:-3001} |" \
-    -e "s|#CONFIG=.*|CONFIG=\${CARDANO_CONFIG:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-config.json} |" \
-    -e "s|#SOCKET=.*|SOCKET=\${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket} |" \
-    -e "s|#TOPOLOGY=.*|TOPOLOGY=\${CARDANO_TOPOLOGY:-/opt/cardano/config/\${CARDANO_NETWORK:-mainnet}-topology.json} |" \
-    -e "s|#LOG_DIR=.*|LOG_DIR=\${CARDANO_LOG_DIR:-/opt/cardano/logs} |" \
-    -e "s|#DB_DIR=.*|DB_DIR=\${CARDANO_DATABASE_PATH:-/opt/cardano/data} |" > \
-    /usr/local/bin/env && \
+  rm -rf /var/lib/apt/lists/* && \
   chmod +x /usr/local/bin/*
 EXPOSE 3001 12788 12798
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
