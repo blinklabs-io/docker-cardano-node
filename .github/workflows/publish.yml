@@ -81,7 +81,7 @@ jobs:
           done
 
   build-arm64:
-    runs-on: self-hosted
+    runs-on: ["self-hosted", "ARM64"]
     permissions:
       contents: read
       packages: write
