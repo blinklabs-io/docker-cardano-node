@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: qemu
         uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: docker/setup-buildx-action@v3
       - uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: qemu
         uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: docker/setup-buildx-action@v3
       - uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
