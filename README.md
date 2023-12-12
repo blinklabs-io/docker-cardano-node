@@ -117,14 +117,18 @@ storage and IPC (interprocess communication) so they live beyond the lifetime
 of the container. To mount local host paths instead of using Docker's built in
 volumes, use the local path on the left side of a `-v` argument.
 
-An example of a more advanced configuration for mainnet:
+An example of a more advanced configuration, running a block producer for
+mainnet:
 
 ```bash
 docker run --detach \
   --name cardano-node \
   --restart unless-stopped \
-  -e CARDANO_CONFIG=/opt/cardano/config/mainnet/p2p-config.json \
-  -e CARDANO_TOPOLOGY=/opt/cardano/config/mainnet/p2p-topology.json \
+  -e CARDANO_BLOCK_PRODUCER=true \
+  -e CARDANO_SHELLEY_KES_KEY=/opt/cardano/config/keys/kes.skey \
+  -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
+  -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
+  -v /src/cardano/node-keys:/opt/cardano/config/keys \
   -v /srv/cardano/node-db:/opt/cardano/data \
   -v /srv/cardano/node-ipc:/opt/cardano/ipc \
   -p 3001:3001 \
@@ -134,14 +138,14 @@ docker run --detach \
 
 The above uses Docker's built in supervisor to restart a container which fails
 for any reason. This will also cause the container to automatically restart
-after a host reboot, so long as Docker is configured to start on boot. The
-current default configuration for mainnet does not enable P2P, so we override
-the configuration with the shipped `p2p-config.json` and its accompanying
-`p2p-topology.json` to enable it. Our node's persistent data and client
-communication socket are mapped to `/src/cardano/node-db` and
-`/src/cardano/node-ipc` on the host, respectively. This allows for running
-applications directly on the host which may need access to these. Last, we add
-mapping the host's port 12798 to the container 12798, which is the port for
+after a host reboot, so long as Docker is configured to start on boot. We
+set variables to configure a block producer and pass the paths to the 3 keys
+we need. Our node's persistent data and client communication socket are mapped
+to `/src/cardano/node-db` and `/src/cardano/node-ipc` on the host,
+respectively. This allows for running applications directly on the host which
+may need access to these. We also map `/src/cardano/node-keys` on the host to
+a path within the container to support running as a block producer. Last, we
+add mapping the host's port 12798 to the container 12798, which is the port for
 exposing the node's metrics in Prometheus format, for monitoring.
 
 This mode of operation allows configuring multiple facets of the node using
