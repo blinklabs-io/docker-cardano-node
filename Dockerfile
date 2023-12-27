@@ -1,4 +1,4 @@
-FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.8.1.0-1 as cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:8.10.7-3.8.1.0-2 as cardano-node-build
 # Install cardano-node
 ARG NODE_VERSION=8.1.2
 ENV NODE_VERSION=${NODE_VERSION}
@@ -10,8 +10,6 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && git tag \
     && git checkout tags/${NODE_VERSION} \
     && echo "with-compiler: ghc-${GHC_VERSION}" >> cabal.project.local \
-    && echo "package cardano-crypto-praos" >> cabal.project.local \
-    && echo "  flags: -external-libsodium-vrf" >> cabal.project.local \
     && echo "tests: False" >> cabal.project.local \
     && cabal update \
     && cabal build all \
@@ -30,8 +28,8 @@ COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
 COPY --from=ghcr.io/blinklabs-io/mithril-client:0.5.5-1 /bin/mithril-client /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/nview:0.7.0 /bin/nview /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/txtop:0.2.1 /bin/txtop /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/nview:0.7.1 /bin/nview /usr/local/bin/
+COPY --from=ghcr.io/blinklabs-io/txtop:0.5.0 /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
