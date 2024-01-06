@@ -20,16 +20,21 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
+FROM ghcr.io/blinklabs-io/cardano-cli:8.17.0.0 AS cardano-cli
+FROM ghcr.io/blinklabs-io/mithril-client:0.5.5-1 AS mithril-client
+FROM ghcr.io/blinklabs-io/nview:0.7.1 AS nview
+FROM ghcr.io/blinklabs-io/txtop:0.5.0 AS txtop
+
 FROM debian:bookworm-slim AS cardano-node
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/cardano-cli:8.17.0.0 /usr/local/bin/cardano-cli /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/mithril-client:0.5.5-1 /bin/mithril-client /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/nview:0.7.1 /bin/nview /usr/local/bin/
-COPY --from=ghcr.io/blinklabs-io/txtop:0.5.0 /bin/txtop /usr/local/bin/
+COPY --from=cardano-cli /usr/local/bin/cardano-cli /usr/local/bin/
+COPY --from=mithril-client /bin/mithril-client /usr/local/bin/
+COPY --from=nview /bin/nview /usr/local/bin/
+COPY --from=txtop /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
 COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
