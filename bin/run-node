@@ -92,7 +92,7 @@ mkdir -p $(dirname ${CARDANO_SOCKET_PATH})
 if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
 	echo "Detected empty ${CARDANO_DATABASE_PATH}"
 	if [[ ${RESTORE_SNAPSHOT} == true ]]; then
-		mkdir -p ${CARDANO_DATABASE_PATH}
+		mkdir -p $(dirname ${CARDANO_DATABASE_PATH})
 		cd $(dirname ${CARDANO_DATABASE_PATH})
 		export AGGREGATOR_ENDPOINT GENESIS_VERIFICATION_KEY SNAPSHOT_DIGEST
 		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
