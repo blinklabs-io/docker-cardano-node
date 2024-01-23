@@ -43,7 +43,11 @@ CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS:--N2 -A64m -I0 -qg -qb --disable-delayed-os-
 CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH:-/opt/cardano/ipc/socket}
 CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY:-${CARDANO_CONFIG_BASE}/${CARDANO_NETWORK}/topology.json}
 # mithril
-AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT:-https://aggregator.release-${CARDANO_NETWORK}.api.mithril.network/aggregator}
+case ${CARDANO_NETWORK} in
+	mainnet|preprod) __path=release-${CARDANO_NETWORK} ;;
+	preview) __path=pre-release-${CARDANO_NETWORK} ;;
+esac
+AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT:-https://aggregator.${__path}.api.mithril.network/aggregator}
 GENESIS_VERIFICATION_KEY_PATH=${GENESIS_VERIFICATION_KEY_PATH:-${CARDANO_CONFIG_BASE}/${CARDANO_NETWORK}/genesis.vkey}
 if [[ -z $GENESIS_VERIFICATION_KEY && -f $GENESIS_VERIFICATION_KEY_PATH ]]; then
 	GENESIS_VERIFICATION_KEY=$(<${GENESIS_VERIFICATION_KEY_PATH})
