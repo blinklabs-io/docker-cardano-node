@@ -76,15 +76,6 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	echo CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE}
 fi
 
-case ${CARDANO_NETWORK} in
-	preview|sanchonet)
-		if [[ ${RESTORE_SNAPSHOT} == true ]]; then
-			echo "Mithril not supported on ${CARDANO_NETWORK}... skipping"
-		fi
-		RESTORE_SNAPSHOT=false
-		;;
-esac
-
 echo AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT}
 echo GENESIS_VERIFICATION_KEY=${GENESIS_VERIFICATION_KEY}
 echo SNAPSHOT_DIGEST=${SNAPSHOT_DIGEST}
@@ -100,6 +91,9 @@ if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
 		cd $(dirname ${CARDANO_DATABASE_PATH})
 		export AGGREGATOR_ENDPOINT GENESIS_VERIFICATION_KEY SNAPSHOT_DIGEST
 		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
+		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
+			rm -rf db/*
+		fi
 		mithril-client snapshot download ${SNAPSHOT_DIGEST}
 		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
 			mv -f db/* ${CARDANO_DATABASE_PATH}/
