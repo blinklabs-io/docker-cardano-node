@@ -94,7 +94,15 @@ if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
 		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
 			rm -rf db/*
 		fi
-		mithril-client snapshot download ${SNAPSHOT_DIGEST}
+		# Handle SIGTERM during initial sync
+		trap 'kill -TERM $(pidof mithril-client)' TERM
+		# Run mithril-client in the background so we can capture the PID and wait
+		mithril-client snapshot download ${SNAPSHOT_DIGEST} &
+		_mithril_pid=$!
+		wait $_mithril_pid || exit $?
+		# Reset signal handler and wait again (to avoid race condition)
+		trap - TERM
+		wait $_mithril_pid || exit $?
 		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
 			mv -f db/* ${CARDANO_DATABASE_PATH}/
 		fi
