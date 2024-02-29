@@ -15,6 +15,10 @@ esac
 # Mithril
 if ! test -e /data/db/protocolMagicId; then
 	__base=https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration
+	RESTORE_NETWORK=${RESTORE_NETWORK:-true}
+	if [[ ${RESTORE_NETWORK} != true ]]; then
+		__skip=true
+	fi
 	case ${NETWORK} in
 		mainnet|preprod) __path=release-${NETWORK} ;;
 		preview) __path=pre-release-${NETWORK} ;;
