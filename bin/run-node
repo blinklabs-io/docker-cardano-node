@@ -75,6 +75,11 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	echo CARDANO_SHELLEY_KES_KEY=${CARDANO_SHELLEY_KES_KEY}
 	echo CARDANO_SHELLEY_VRF_KEY=${CARDANO_SHELLEY_VRF_KEY}
 	echo CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE}
+else
+	sed -i \
+		-e 's/"PeerSharing": false/"PeerSharing": true/' \
+		-e 's/"TraceMempool": false/"TraceMempool": true/' \
+		${CARDANO_CONFIG}
 fi
 
 echo AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT}
