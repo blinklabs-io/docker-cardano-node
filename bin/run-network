@@ -44,6 +44,12 @@ if ! test -e /data/db/protocolMagicId; then
 	fi
 fi
 
+# Enable TraceMempool and PeerSharing
+sed -i \
+	-e 's/"PeerSharing": false/"PeerSharing": true/' \
+	-e 's/"TraceMempool": false/"TraceMempool": true/' \
+	/opt/cardano/config/${NETWORK}/config.json
+
 echo "Starting: /usr/local/bin/cardano-node run"
 echo "--config /opt/cardano/config/${NETWORK}/config.json"
 echo "--database-path /data/db"
