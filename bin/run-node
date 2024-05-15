@@ -96,14 +96,14 @@ if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
 		mkdir -p $(dirname ${CARDANO_DATABASE_PATH})
 		cd $(dirname ${CARDANO_DATABASE_PATH})
 		export AGGREGATOR_ENDPOINT GENESIS_VERIFICATION_KEY SNAPSHOT_DIGEST
-		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
+		echo "Starting: /usr/local/bin/mithril-client cardano-db download ${SNAPSHOT_DIGEST}"
 		if [[ $(cd ${CARDANO_DATABASE_PATH}; pwd -P) != $(pwd -P)/db ]]; then
 			rm -rf db/*
 		fi
 		# Handle SIGTERM during initial sync
 		trap 'kill -TERM $(pidof mithril-client)' TERM
 		# Run mithril-client in the background so we can capture the PID and wait
-		mithril-client snapshot download ${SNAPSHOT_DIGEST} &
+		mithril-client cardano-db download ${SNAPSHOT_DIGEST} &
 		_mithril_pid=$!
 		wait $_mithril_pid || exit $?
 		# Reset signal handler and wait again (to avoid race condition)
