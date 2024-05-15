@@ -14,7 +14,6 @@ esac
 
 # Mithril
 if ! test -e /data/db/protocolMagicId; then
-	__base=https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration
 	RESTORE_NETWORK=${RESTORE_NETWORK:-true}
 	if [[ ${RESTORE_NETWORK} != true ]]; then
 		__skip=true
@@ -28,14 +27,14 @@ if ! test -e /data/db/protocolMagicId; then
 	if [[ ${__skip} != true ]]; then
 		export GENESIS_VERIFICATION_KEY=$(</opt/cardano/config/${NETWORK}/genesis.vkey)
 		export AGGREGATOR_ENDPOINT=https://aggregator.${__path}.api.mithril.network/aggregator
-		export SNAPSHOT_DIGEST=$(mithril-client snapshot list --json | jq -r '.[0].digest')
+		export SNAPSHOT_DIGEST=$(mithril-client cardano-db snapshot list --json | jq -r '.[0].digest')
 		mkdir -p /data
 		cd /data
-		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
+		echo "Starting: /usr/local/bin/mithril-client cardano-db download ${SNAPSHOT_DIGEST}"
 		# Handle SIGTERM during initial sync
 		trap 'kill -TERM $(pidof mithril-client)' TERM
 		# Run mithril-client in the background so we can capture the PID and wait
-		mithril-client snapshot download ${SNAPSHOT_DIGEST} &
+		mithril-client cardano-db snapshot download ${SNAPSHOT_DIGEST} &
 		_mithril_pid=$!
 		wait $_mithril_pid || exit $?
 		# Reset signal handler and wait again (to avoid race condition)
