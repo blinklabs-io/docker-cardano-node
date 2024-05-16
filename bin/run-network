@@ -34,7 +34,7 @@ if ! test -e /data/db/protocolMagicId; then
 		# Handle SIGTERM during initial sync
 		trap 'kill -TERM $(pidof mithril-client)' TERM
 		# Run mithril-client in the background so we can capture the PID and wait
-		mithril-client cardano-db snapshot download ${SNAPSHOT_DIGEST} &
+		mithril-client cardano-db download ${SNAPSHOT_DIGEST} &
 		_mithril_pid=$!
 		wait $_mithril_pid || exit $?
 		# Reset signal handler and wait again (to avoid race condition)
