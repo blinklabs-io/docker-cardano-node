@@ -22,7 +22,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
 
 FROM ghcr.io/blinklabs-io/cardano-cli:8.22.0.0 AS cardano-cli
 FROM ghcr.io/blinklabs-io/mithril-client:0.8.0-1 AS mithril-client
-FROM ghcr.io/blinklabs-io/nview:0.9.3 AS nview
+FROM ghcr.io/blinklabs-io/nview:0.9.4 AS nview
 FROM ghcr.io/blinklabs-io/txtop:0.8.0 AS txtop
 
 FROM debian:bookworm-slim AS cardano-node
