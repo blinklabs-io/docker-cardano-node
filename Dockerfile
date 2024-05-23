@@ -21,6 +21,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
 FROM ghcr.io/blinklabs-io/cardano-cli:8.22.0.0 AS cardano-cli
+FROM ghcr.io/blinklabs-io/cardano-configs:20240515-1 as cardano-configs
 FROM ghcr.io/blinklabs-io/mithril-client:0.8.0-1 AS mithril-client
 FROM ghcr.io/blinklabs-io/nview:0.9.4 AS nview
 FROM ghcr.io/blinklabs-io/txtop:0.8.0 AS txtop
@@ -31,12 +32,12 @@ ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
+COPY --from=cardano-configs /config/ /opt/cardano/config/
 COPY --from=cardano-cli /usr/local/bin/cardano-cli /usr/local/bin/
 COPY --from=mithril-client /bin/mithril-client /usr/local/bin/
 COPY --from=nview /bin/nview /usr/local/bin/
 COPY --from=txtop /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
-COPY config/ /opt/cardano/config/
 RUN apt-get update -y && \
   apt-get install -y \
     bc \
