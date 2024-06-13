@@ -14,20 +14,40 @@ esac
 
 # Mithril
 if ! test -e /data/db/protocolMagicId; then
-	if [[ ${NETWORK} != preview ]]; then
-		__base=https://raw.githubusercontent.com/input-output-hk/mithril/main/mithril-infra/configuration
-		__url=${__base}/release-${NETWORK}
-		export GENESIS_VERIFICATION_KEY=$(curl ${__url}/genesis.vkey 2> /dev/null)
-		export AGGREGATOR_ENDPOINT=https://aggregator.release-${NETWORK}.api.mithril.network/aggregator
+	RESTORE_NETWORK=${RESTORE_NETWORK:-true}
+	if [[ ${RESTORE_NETWORK} != true ]]; then
+		__skip=true
+	fi
+	case ${NETWORK} in
+		mainnet|preprod) __path=release-${NETWORK} ;;
+		preview) __path=pre-release-${NETWORK} ;;
+		sanchonet) __path=testing-${NETWORK} ;;
+		*) echo "Mithril not supported on ${NETWORK}... skipping"; __skip=true ;;
+	esac
+	if [[ ${__skip} != true ]]; then
+		export GENESIS_VERIFICATION_KEY=$(</opt/cardano/config/${NETWORK}-genesis.vkey)
+		export AGGREGATOR_ENDPOINT=https://aggregator.${__path}.api.mithril.network/aggregator
 		export SNAPSHOT_DIGEST=$(mithril-client snapshot list --json | jq -r '.[0].digest')
 		mkdir -p /data
 		cd /data
 		echo "Starting: /usr/local/bin/mithril-client snapshot download ${SNAPSHOT_DIGEST}"
-		mithril-client snapshot download ${SNAPSHOT_DIGEST}
-	else
-		echo "Mithril not supported on preview... skipping"
+		# Handle SIGTERM during initial sync
+		trap 'kill -TERM $(pidof mithril-client)' TERM
+		# Run mithril-client in the background so we can capture the PID and wait
+		mithril-client snapshot download ${SNAPSHOT_DIGEST} &
+		_mithril_pid=$!
+		wait $_mithril_pid || exit $?
+		# Reset signal handler and wait again (to avoid race condition)
+		trap - TERM
+		wait $_mithril_pid || exit $?
 	fi
 fi
+
+# Enable TraceMempool and PeerSharing
+sed -i \
+	-e 's/"PeerSharing": false/"PeerSharing": true/' \
+	-e 's/"TraceMempool": false/"TraceMempool": true/' \
+	/opt/cardano/config/${NETWORK}-config.json
 
 echo "Starting: /usr/local/bin/cardano-node run"
 echo "--config /opt/cardano/config/${NETWORK}-config.json"
