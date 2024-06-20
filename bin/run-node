@@ -76,10 +76,16 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	echo CARDANO_SHELLEY_VRF_KEY=${CARDANO_SHELLEY_VRF_KEY}
 	echo CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=${CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE}
 else
-	sed -i \
-		-e 's/"PeerSharing": false/"PeerSharing": true/' \
-		-e 's/"TraceMempool": false/"TraceMempool": true/' \
-		${CARDANO_CONFIG}
+	set +e
+	# Check if our configuration is writable (may be different from permissions)
+	touch ${CARDANO_CONFIG} 2>&1 >/dev/null
+	if test $? -eq 0; then
+		sed -i \
+			-e 's/"PeerSharing": false/"PeerSharing": true/' \
+			-e 's/"TraceMempool": false/"TraceMempool": true/' \
+			${CARDANO_CONFIG}
+	fi
+	set -e
 fi
 
 echo AGGREGATOR_ENDPOINT=${AGGREGATOR_ENDPOINT}
