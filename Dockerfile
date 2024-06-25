@@ -20,7 +20,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM ghcr.io/blinklabs-io/cardano-cli:8.23.1.0 AS cardano-cli
+FROM ghcr.io/blinklabs-io/cardano-cli:8.24.0.0 AS cardano-cli
 FROM ghcr.io/blinklabs-io/cardano-configs:20240515-2 as cardano-configs
 FROM ghcr.io/blinklabs-io/mithril-client:0.9.2-1 AS mithril-client
 FROM ghcr.io/blinklabs-io/nview:0.10.0 AS nview
