@@ -56,6 +56,7 @@ RUN apt-get update -y && \
     netbase \
     pkg-config \
     procps \
+    socat \
     sqlite3 \
     wget \
     zlib1g && \
