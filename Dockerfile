@@ -23,6 +23,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
 FROM ghcr.io/blinklabs-io/cardano-cli:9.4.1.0-1 AS cardano-cli
 FROM ghcr.io/blinklabs-io/cardano-configs:20240725-1 AS cardano-configs
 FROM ghcr.io/blinklabs-io/mithril-client:0.9.12-1 AS mithril-client
+FROM ghcr.io/blinklabs-io/mithril-signer:0.2.182-1 AS mithril-signer
 FROM ghcr.io/blinklabs-io/nview:0.10.1 AS nview
 FROM ghcr.io/blinklabs-io/txtop:0.11.1 AS txtop
 
@@ -35,6 +36,7 @@ COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
 COPY --from=cardano-configs /config/ /opt/cardano/config/
 COPY --from=cardano-cli /usr/local/bin/cardano-cli /usr/local/bin/
 COPY --from=mithril-client /bin/mithril-client /usr/local/bin/
+COPY --from=mithril-signer /bin/mithril-signer /usr/local/bin/
 COPY --from=nview /bin/nview /usr/local/bin/
 COPY --from=txtop /bin/txtop /usr/local/bin/
 COPY bin/ /usr/local/bin/
