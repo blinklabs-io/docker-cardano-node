@@ -233,7 +233,7 @@ jobs:
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
             docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
           done
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && ! contains('-pre-', github.ref)
       # Push various manifests
       - name: push-ghcr
         run: |
@@ -246,7 +246,7 @@ jobs:
           for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
             docker manifest push ${t}
           done
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && ! contains('-pre-', github.ref)
 
       # Now, create manifests for Docker Hub
 
@@ -261,7 +261,7 @@ jobs:
             docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
             docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
           done
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && ! contains('-pre-', github.ref)
       - name: push-dockerhub
         run: |
           for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
@@ -273,7 +273,7 @@ jobs:
           for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
             docker manifest push ${t}
           done
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && ! contains('-pre-', github.ref)
 
       # Update Docker Hub from README
 
@@ -302,7 +302,7 @@ jobs:
                 generate_release_notes: true,
                 name: process.env.RELEASE_TAG,
                 owner: context.repo.owner,
-                prerelease: false,
+                prerelease: ${{ (startsWith(github.ref, 'refs/tags/') && ! contains('-pre-', github.ref)) && true || false }},
                 repo: context.repo.repo,
                 tag_name: process.env.RELEASE_TAG,
               });
