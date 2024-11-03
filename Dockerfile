@@ -1,6 +1,6 @@
 FROM ghcr.io/blinklabs-io/haskell:9.6.4-3.10.2.0-1 AS cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=10.1.1
+ARG NODE_VERSION=10.1.2
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
@@ -20,7 +20,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM ghcr.io/blinklabs-io/cardano-cli:10.1.0.0-1 AS cardano-cli
+FROM ghcr.io/blinklabs-io/cardano-cli:10.1.1.0-1 AS cardano-cli
 FROM ghcr.io/blinklabs-io/cardano-configs:20241028-1 AS cardano-configs
 FROM ghcr.io/blinklabs-io/mithril-client:0.9.15-1 AS mithril-client
 FROM ghcr.io/blinklabs-io/mithril-signer:0.2.200-1 AS mithril-signer
