@@ -123,6 +123,13 @@ elif [[ ${RESTORE_SNAPSHOT} == true ]]; then
 	echo "Detected populated ${CARDANO_DATABASE_PATH}... skipping restore"
 fi
 
+cd ${CARDANO_DATABASE_PATH}
+
+if [[ ${SOCAT_PORT:-0} != 0 ]]; then
+	echo "Port ${SOCAT_PORT} configured for socat... launching in background"
+	nohup socat TCP-LISTEN:${SOCAT_PORT},fork UNIX-CLIENT:${CARDANO_SOCKET_PATH},ignoreeof &
+fi
+
 if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 	effopts=(--config ${CARDANO_CONFIG} \
 		--database-path ${CARDANO_DATABASE_PATH} \
