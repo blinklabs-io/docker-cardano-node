@@ -1,6 +1,6 @@
 FROM ghcr.io/blinklabs-io/haskell:9.6.4-3.10.2.0-1 AS cardano-node-build
 # Install cardano-node
-ARG NODE_VERSION=10.1.4
+ARG NODE_VERSION=10.2.1
 ENV NODE_VERSION=${NODE_VERSION}
 RUN echo "Building tags/${NODE_VERSION}..." \
     && echo tags/${NODE_VERSION} > /CARDANO_BRANCH \
