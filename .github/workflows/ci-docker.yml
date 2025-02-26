@@ -9,6 +9,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: blinklabs/cardano-node
 
+permissions:
+  contents: read
+
 jobs:
   build-amd64:
     runs-on: ubuntu-latest
