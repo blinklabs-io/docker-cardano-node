@@ -288,6 +288,8 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: [multi-arch-manifest]
     steps:
       - run: "echo \"RELEASE_TAG=${GITHUB_REF#refs/tags/}\" >> $GITHUB_ENV"
