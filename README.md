@@ -100,6 +100,7 @@ fully configurable code path. Do not set the `NETWORK` environment variable.
 
 To run a Cardano full node on mainnet with minimal configuration and defaults:
 
+Cardano Node before 10.3.1:
 ```bash
 docker run --detach \
   --name cardano-node \
@@ -110,6 +111,16 @@ docker run --detach \
 ```
 
 **NOTE** The container paths for persist disks are different in this mode
+
+Cardano Node 10.3.1 and above:
+```bash
+docker run --detach \
+  --name cardano-node \
+  -v node-data:/data/db \
+  -v node-ipc:/ipc \
+  -p 3001:3001 \
+  ghcr.io/blinklabs-io/cardano-node run
+```
 
 The above maps port 3001 on the host to 3001 on the container, suitable
 for use as a mainnet relay node. We use docker volumes for our persistent data
@@ -129,8 +140,8 @@ docker run --detach \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
   -v /src/cardano/node-keys:/opt/cardano/config/keys \
-  -v /srv/cardano/node-db:/opt/cardano/data \
-  -v /srv/cardano/node-ipc:/opt/cardano/ipc \
+  -v /srv/cardano/node-db:/data/db \
+  -v /srv/cardano/node-ipc:/ipc \
   -p 3001:3001 \
   -p 12798:12798 \
   ghcr.io/blinklabs-io/cardano-node run
@@ -182,7 +193,7 @@ This behavior can be changed via the following environment variables:
   - Use your own configuration file to modify the node behavior fully
 - `CARDANO_DATABASE_PATH`
   - A directory which contains the ledger database files (default:
-    `/opt/cardano/data`)
+    `/data/db`)
   - This is the location for persistent data storage for the ledger
 - `CARDANO_PORT`
   - TCP port to bind for listening (default: `3001`)
@@ -191,11 +202,11 @@ This behavior can be changed via the following environment variables:
     `-N2 -A64m -I0 -qg -qb --disable-delayed-os-memory-return`)
   - This allows tuning the node for specific use cases or resource contraints
 - `CARDANO_SOCKET_PATH`
-  - UNIX socket path for listening (default: `/opt/cardano/ipc/socket`)
+  - UNIX socket path for listening (default: `/ipc/node.socket`)
   - This socket speaks Ouroboros NtC and is used by client software
 - `CARDANO_TOPOLOGY`
   - Full path to the Cardano node topology (default:
-    `${CARDANO_CONFIG_BASE}/mainnet-topology.json`)
+    `${CARDANO_CONFIG_BASE}/mainnet/topology.json`)
 
 #### Running a block producer
 
@@ -236,7 +247,7 @@ To run a Cardano CLI command, we use the `node-ipc` volume from our node.
 
 ```bash
 docker run --rm -ti \
-  -v node-ipc:/opt/cardano/ipc \
+  -v node-ipc:/ipc \
   ghcr.io/blinklabs-io/cardano-node cli <command>
 ```
 
@@ -244,7 +255,7 @@ This can be added to a shell alias:
 
 ```bash
 alias cardano-cli="docker run --rm -ti \
-  -v node-ipc:/opt/cardano/ipc \
+  -v node-ipc:/ipc \
   ghcr.io/blinklabs-io/cardano-node cli"
 ```
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[[ -n ${DEBUG} ]] && set -x
+
 if [[ -z ${NETWORK} ]]; then
 	echo "[Error] Cannot obtain NETWORK env variable"
 	exit 1
