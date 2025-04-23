@@ -1,7 +1,8 @@
 # docker-cardano-node
 
 Builds a Cardano full node from source on Debian. This image attempts to keep
-interface compatibility with `inputoutput/cardano-node`, but may diverge
+interface compatibility with
+[cardano-node](https://github.com/IntersectMBO/cardano-node), but may diverge
 slightly, particularly with any Nix-specific paths.
 
 We found that the learning curve for using Nix is too high for many in the
