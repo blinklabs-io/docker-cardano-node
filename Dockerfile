@@ -15,6 +15,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && cabal build all \
     && mkdir -p /root/.local/bin/ \
     && cp -p "$(./scripts/bin-path.sh cardano-node)" /root/.local/bin/ \
+    && cp -p "$(./scripts/bin-path.sh cardano-tracer)" /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
     && rm -rf /usr/local/lib/ghc-${GHC_VERSION}/ /usr/local/share/doc/ghc-${GHC_VERSION}/ \
     && rm -rf /code/cardano-node/dist-newstyle/ \
