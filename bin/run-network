@@ -34,6 +34,7 @@ if ! test -e /data/db/protocolMagicId; then
 		mkdir -p /data
 		cd /data
 		echo "Starting: /usr/local/bin/mithril-client cardano-db download ${SNAPSHOT_DIGEST} ${ANCILLARY_VERIFICATION_KEY:+--include-ancillary}"
+		echo "(This could take a while...)"
 		# Handle SIGTERM during initial sync
 		trap 'kill -TERM $(pidof mithril-client)' TERM
 		# Run mithril-client in the background so we can capture the PID and wait

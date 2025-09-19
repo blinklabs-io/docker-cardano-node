@@ -130,6 +130,7 @@ if ! test -e ${CARDANO_DATABASE_PATH}/protocolMagicId; then
 		cd $(dirname ${CARDANO_DATABASE_PATH})
 		export AGGREGATOR_ENDPOINT GENESIS_VERIFICATION_KEY ANCILLARY_VERIFICATION_KEY SNAPSHOT_DIGEST
 		echo "Starting: /usr/local/bin/mithril-client cardano-db download ${SNAPSHOT_DIGEST} ${ANCILLARY_VERIFICATION_KEY:+--include-ancillary}"
+		echo "(This could take a while...)"
 		if [[ $(cd ${CARDANO_DATABASE_PATH} 2>/dev/null; pwd -P) != $(pwd -P)/db ]]; then
 			rm -rf db/*
 		fi
