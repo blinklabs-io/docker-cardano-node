@@ -140,9 +140,9 @@ docker run --detach \
   -e CARDANO_SHELLEY_KES_KEY=/opt/cardano/config/keys/kes.skey \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
-  -v /src/cardano/node-keys:/opt/cardano/config/keys \
-  -v /src/cardano/node-db:/data/db \
-  -v /src/cardano/node-ipc:/ipc \
+  -v /srv/cardano/node-keys:/opt/cardano/config/keys \
+  -v /srv/cardano/node-db:/data/db \
+  -v /srv/cardano/node-ipc:/ipc \
   -p 3001:3001 \
   -p 12798:12798 \
   ghcr.io/blinklabs-io/cardano-node run
@@ -161,9 +161,9 @@ docker run --detach \
   -e CARDANO_SHELLEY_KES_KEY=/opt/cardano/config/keys/kes.skey \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
-  -v /src/cardano/node-keys:/opt/cardano/config/keys \
-  -v /src/cardano/node-db:/data/db \
-  -v /src/cardano/node-ipc:/ipc \
+  -v /srv/cardano/node-keys:/opt/cardano/config/keys \
+  -v /srv/cardano/node-db:/data/db \
+  -v /srv/cardano/node-ipc:/ipc \
   -p 3001:3001 \
   -p 12798:12798 \
   ghcr.io/blinklabs-io/cardano-node run
@@ -193,9 +193,9 @@ for any reason. This will also cause the container to automatically restart
 after a host reboot, so long as Docker is configured to start on boot. We
 set variables to configure a block producer and pass the paths to the 3 keys
 we need. Our node's persistent data and client communication socket are mapped
-to `/src/cardano/node-db` and `/src/cardano/node-ipc` on the host,
+to `/srv/cardano/node-db` and `/srv/cardano/node-ipc` on the host,
 respectively. This allows for running applications directly on the host which
-may need access to these. We also map `/src/cardano/node-keys` on the host to
+may need access to these. We also map `/srv/cardano/node-keys` on the host to
 a path within the container to support running as a block producer. Last, we
 add mapping the host's port 12798 to the container 12798, which is the port for
 exposing the node's metrics in Prometheus format, for monitoring.
