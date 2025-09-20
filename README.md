@@ -141,8 +141,8 @@ docker run --detach \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
   -v /src/cardano/node-keys:/opt/cardano/config/keys \
-  -v /srv/cardano/node-db:/data/db \
-  -v /srv/cardano/node-ipc:/ipc \
+  -v /src/cardano/node-db:/data/db \
+  -v /src/cardano/node-ipc:/ipc \
   -p 3001:3001 \
   -p 12798:12798 \
   ghcr.io/blinklabs-io/cardano-node run
@@ -162,8 +162,8 @@ docker run --detach \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
   -v /src/cardano/node-keys:/opt/cardano/config/keys \
-  -v /srv/cardano/node-db:/data/db \
-  -v /srv/cardano/node-ipc:/ipc \
+  -v /src/cardano/node-db:/data/db \
+  -v /src/cardano/node-ipc:/ipc \
   -p 3001:3001 \
   -p 12798:12798 \
   ghcr.io/blinklabs-io/cardano-node run
