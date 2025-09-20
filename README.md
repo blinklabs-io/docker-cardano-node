@@ -140,7 +140,7 @@ docker run --detach \
   -e CARDANO_SHELLEY_KES_KEY=/opt/cardano/config/keys/kes.skey \
   -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
   -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
-  -v /src/cardano/node-keys:/opt/cardano/config/keys \
+  -v /srv/cardano/node-keys:/opt/cardano/config/keys \
   -v /srv/cardano/node-db:/data/db \
   -v /srv/cardano/node-ipc:/ipc \
   -p 3001:3001 \
@@ -148,14 +148,54 @@ docker run --detach \
   ghcr.io/blinklabs-io/cardano-node run
 ```
 
+##### Dynamic Block Forging
+
+To start a block producer in non-producing mode initially (for dynamic block forging):
+
+```bash
+docker run --detach \
+  --name cardano-node \
+  --restart unless-stopped \
+  -e CARDANO_BLOCK_PRODUCER=true \
+  -e START_AS_NON_PRODUCING=true \
+  -e CARDANO_SHELLEY_KES_KEY=/opt/cardano/config/keys/kes.skey \
+  -e CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE=/opt/cardano/config/keys/node.cert \
+  -e CARDANO_SHELLEY_VRF_KEY=/opt/cardano/config/keys/vrf.skey \
+  -v /srv/cardano/node-keys:/opt/cardano/config/keys \
+  -v /srv/cardano/node-db:/data/db \
+  -v /srv/cardano/node-ipc:/ipc \
+  -p 3001:3001 \
+  -p 12798:12798 \
+  ghcr.io/blinklabs-io/cardano-node run
+```
+
+With dynamic block forging enabled, you can control block production without restarting the node:
+
+- **Enable block forging**: Ensure credential files are present and send SIGHUP
+  ```bash
+  docker exec cardano-node pkill -SIGHUP cardano-node
+  ```
+
+- **Disable block forging**: Move/rename credential files and send SIGHUP
+  ```bash
+  docker exec cardano-node mv /opt/cardano/config/keys/kes.skey /opt/cardano/config/keys/kes.skey.disabled
+  docker exec cardano-node pkill -SIGHUP cardano-node
+  ```
+
+- **Re-enable block forging**: Restore credential files and send SIGHUP
+  ```bash
+  docker exec cardano-node mv /opt/cardano/config/keys/kes.skey.disabled /opt/cardano/config/keys/kes.skey
+  docker exec cardano-node pkill -SIGHUP cardano-node
+  ```
+
 The above uses Docker's built in supervisor to restart a container which fails
 for any reason. This will also cause the container to automatically restart
 after a host reboot, so long as Docker is configured to start on boot. We
 set variables to configure a block producer and pass the paths to the 3 keys
 we need. Our node's persistent data and client communication socket are mapped
-to `/src/cardano/node-db` and `/src/cardano/node-ipc` on the host,
+to `/srv/cardano/node-db` and `/srv/cardano/node-ipc` on the host,
 respectively. This allows for running applications directly on the host which
-may need access to these. We also map `/src/cardano/node-keys` on the host to
+may need access to these. We also map `/srv/cardano/node-keys` on the host to
 a path within the container to support running as a block producer. Last, we
 add mapping the host's port 12798 to the container 12798, which is the port for
 exposing the node's metrics in Prometheus format, for monitoring.
@@ -224,7 +264,12 @@ and operational certificate.
     `${CARDANO_CONFIG_BASE}/keys/vrf.skey`)
 - `CARDANO_SHELLEY_OPERATIONAL_CERTIFICATE`
   - Stake pool identity certificate (default:
-    `${CARDANO_CONFIG_BASE}/keys/node.cert`
+    `${CARDANO_CONFIG_BASE}/keys/node.cert`)
+- `START_AS_NON_PRODUCING`
+  - Start block producer node in non-producing mode (default: `false`)
+  - When set to `true`, adds the `--start-as-non-producing-node` flag
+  - Only applies when `CARDANO_BLOCK_PRODUCER=true`
+  - Enables dynamic block forging control via SIGHUP signals
 
 #### Controlling Mithril snapshots
 

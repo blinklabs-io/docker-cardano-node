@@ -81,6 +81,7 @@ if [[ -z $ANCILLARY_VERIFICATION_KEY && -f $ANCILLARY_VERIFICATION_KEY_PATH ]]; 
 fi
 SNAPSHOT_DIGEST=${SNAPSHOT_DIGEST:-latest}
 RESTORE_SNAPSHOT=${RESTORE_SNAPSHOT:-true}
+START_AS_NON_PRODUCING=${START_AS_NON_PRODUCING:-false}
 
 echo CARDANO_BIND_ADDR=${CARDANO_BIND_ADDR}
 echo CARDANO_BLOCK_PRODUCER=${CARDANO_BLOCK_PRODUCER}
@@ -92,6 +93,7 @@ echo CARDANO_PORT=${CARDANO_PORT}
 echo CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS}
 echo CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH}
 echo CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY}
+echo START_AS_NON_PRODUCING=${START_AS_NON_PRODUCING}
 
 # block producer only
 if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
@@ -170,6 +172,10 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 		--shelley-vrf-key ${CARDANO_SHELLEY_VRF_KEY} \
 		--socket-path ${CARDANO_SOCKET_PATH} \
 		--topology ${CARDANO_TOPOLOGY})
+	# Add --start-as-non-producing-node flag if START_AS_NON_PRODUCING is true
+	if [[ ${START_AS_NON_PRODUCING} == true ]]; then
+		effopts+=(--start-as-non-producing-node)
+	fi
 else
 	effopts=(--config ${CARDANO_CONFIG} \
 		--database-path ${CARDANO_DATABASE_PATH} \
