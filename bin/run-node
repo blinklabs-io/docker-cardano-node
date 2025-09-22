@@ -24,6 +24,7 @@ for i in ${!options[@]}; do
 		--shelley-vrf-key) CARDANO_SHELLEY_VRF_KEY=${v}; found=true ;;
 		--socket-path) CARDANO_SOCKET_PATH=${v}; found=true ;;
 		--topology) CARDANO_TOPOLOGY=${v}; found=true ;;
+		--start-as-non-producing-node) START_AS_NON_PRODUCING=${v}; found=true ;;
 	esac
 	if [[ ${found} == true ]]; then
 		options[i]="";
@@ -44,6 +45,7 @@ CARDANO_PORT=${CARDANO_PORT:-3001}
 CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS:--N2 -A64m -I0 -qg -qb --disable-delayed-os-memory-return}
 CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH:-/ipc/node.socket}
 CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY:-${CARDANO_CONFIG_BASE}/${CARDANO_NETWORK}/topology.json}
+START_AS_NON_PRODUCING=${START_AS_NON_PRODUCING:-false}
 # mithril and devnet
 case ${CARDANO_NETWORK} in
 	mainnet|preprod) __path=release-${CARDANO_NETWORK} ;;
@@ -92,6 +94,7 @@ echo CARDANO_PORT=${CARDANO_PORT}
 echo CARDANO_RTS_OPTS=${CARDANO_RTS_OPTS}
 echo CARDANO_SOCKET_PATH=${CARDANO_SOCKET_PATH}
 echo CARDANO_TOPOLOGY=${CARDANO_TOPOLOGY}
+echo START_AS_NON_PRODUCING=${START_AS_NON_PRODUCING}
 
 # block producer only
 if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
@@ -170,6 +173,10 @@ if [[ ${CARDANO_BLOCK_PRODUCER} == true ]]; then
 		--shelley-vrf-key ${CARDANO_SHELLEY_VRF_KEY} \
 		--socket-path ${CARDANO_SOCKET_PATH} \
 		--topology ${CARDANO_TOPOLOGY})
+	# Add --start-as-non-producing-node flag if START_AS_NON_PRODUCING is true
+	if [[ ${START_AS_NON_PRODUCING} == true ]]; then
+		effopts+=(--start-as-non-producing-node)
+	fi
 else
 	effopts=(--config ${CARDANO_CONFIG} \
 		--database-path ${CARDANO_DATABASE_PATH} \
