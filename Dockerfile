@@ -56,6 +56,7 @@ RUN apt-get update -y && \
     libssl3 \
     libtinfo6 \
     llvm-14-runtime \
+    lsof \
     netbase \
     pkg-config \
     procps \
