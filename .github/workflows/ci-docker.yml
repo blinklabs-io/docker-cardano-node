@@ -21,10 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Setup QEMU (for cross-building, optional for amd64)
-        uses: docker/setup-qemu-action@v3
-        if: matrix.arch == 'arm64'
-
       - uses: docker/setup-buildx-action@v3
 
       - id: meta
