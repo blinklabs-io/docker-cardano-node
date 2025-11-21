@@ -13,6 +13,7 @@ env:
 
 jobs:
   build-amd64:
+    # runs-on: ubuntu-latest
     runs-on: [self-hosted, Linux, X64, ansible]
     permissions:
       contents: read
