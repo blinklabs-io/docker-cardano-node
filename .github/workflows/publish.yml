@@ -2,8 +2,8 @@ name: publish
 
 on:
   push:
-    branches: ['main']
-    tags: ['v*.*.*']
+    branches: ["main"]
+    tags: ["v*.*.*"]
 
 concurrency: ${{ github.ref }}
 
@@ -12,9 +12,8 @@ env:
   GHCR_IMAGE_NAME: ghcr.io/blinklabs-io/cardano-node
 
 jobs:
-
   build-amd64:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, ansible]
     permissions:
       contents: read
       packages: write
@@ -148,7 +147,7 @@ jobs:
           done
 
   multi-arch-manifest:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, ansible]
     needs: [build-amd64, build-arm64]
     permissions:
       contents: read
@@ -287,12 +286,12 @@ jobs:
           short-description: "Cardano Node built from source on Debian"
 
   github-release:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, ansible]
     permissions:
       contents: write
     needs: [multi-arch-manifest]
     steps:
-      - run: "echo \"RELEASE_TAG=${GITHUB_REF#refs/tags/}\" >> $GITHUB_ENV"
+      - run: 'echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV'
       - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/releases/tag/v8.0.0
         if: startsWith(github.ref, 'refs/tags/')
         with:

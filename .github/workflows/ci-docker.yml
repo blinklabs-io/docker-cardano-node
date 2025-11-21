@@ -2,8 +2,9 @@ name: Docker CI
 
 on:
   pull_request:
-    branches: ['main','release/**']
-    paths: ['Dockerfile','bin/**','config/**','.github/workflows/ci-docker.yml']
+    branches: ["main", "release/**"]
+    paths:
+      ["Dockerfile", "bin/**", "config/**", ".github/workflows/ci-docker.yml"]
 
 env:
   REGISTRY: ghcr.io
@@ -14,7 +15,7 @@ permissions:
 
 jobs:
   build-amd64:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, ansible]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0 https://github.com/actions/checkout/releases/tag/v5.0.0
       - name: qemu
