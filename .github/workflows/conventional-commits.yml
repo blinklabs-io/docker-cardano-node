@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: Conventional Commits
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, ansible]
     permissions:
       contents: read
     steps:
