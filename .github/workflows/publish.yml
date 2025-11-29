@@ -1,300 +1,271 @@
-name: publish
+name: Publish
+
+# Publishes pre-built images from ci-docker.yml to GHCR and Docker Hub
+# For configuration instructions, see: CI_QUICKSTART.md
 
 on:
-  push:
-    branches: ["main"]
-    tags: ["v*.*.*"]
+  workflow_run:
+    workflows: ["Docker CI"]
+    types:
+      - completed
 
-concurrency: ${{ github.ref }}
+concurrency:
+  group: publish-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
 
 env:
-  DOCKER_IMAGE_NAME: blinklabs/cardano-node
-  GHCR_IMAGE_NAME: ghcr.io/blinklabs-io/cardano-node
+  DOCKER_IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'blinklabs/cardano-node' }}
+  GHCR_IMAGE_NAME: ${{ vars.GHCR_IMAGE_NAME || format('ghcr.io/{0}/cardano-node', github.repository_owner) }}
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME || 'blinklabs' }}
+  ENABLE_UPSTREAM_MAIN_PUBLISH: ${{ vars.ENABLE_UPSTREAM_MAIN_PUBLISH != 'false' }}
 
 jobs:
-  build-amd64:
-    # runs-on: ubuntu-latest
-    runs-on: [self-hosted, Linux, X64, ansible]
-    permissions:
-      contents: read
-      packages: write
+  check-ci-success:
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout/releases/tag/v6.0.0
-      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1 https://github.com/docker/setup-buildx-action/releases/tag/v3.11.1
-      - name: Login to Docker Hub
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
-        with:
-          username: blinklabs
-          password: ${{ secrets.DOCKER_PASSWORD }} # uses token
-      - name: Login to GHCR
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0 https://github.com/actions/cache/releases/tag/v4.3.0
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-buildx-
-      - id: meta
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
-        with:
-          images: |
-            ${{ env.DOCKER_IMAGE_NAME }}
-            ${{ env.GHCR_IMAGE_NAME }}
-          flavor: |
-            latest=false
-            suffix=-amd64
-          tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
-            # branch
-            type=ref,event=branch
-            # semver
-            type=semver,pattern={{version}}
-      - name: push
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0 https://github.com/docker/build-push-action/releases/tag/v6.18.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-      # TEMP fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-      - name: cache
+      - name: Check if should publish
+        id: check
         run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-      # TEMP fix
-      # Something strange is happening with the manifests when we push which
-      # breaks the downstream multi-arch-manifest, so pull and push to work
-      # around this by resubmitting manifests
-      - name: pull-and-push
-        run: |
-          for t in `echo '${{ steps.meta.outputs.tags }}'`; do
-            docker pull $t && docker push $t
-          done
+          echo "=== Workflow Run Information ==="
+          echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Event: ${{ github.event.workflow_run.event }}"
+          echo "Head branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "Repository: ${{ github.event.workflow_run.repository.full_name }}"
+          echo "==============================="
+          
+          # Check if CI workflow succeeded
+          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
+            echo "CI workflow did not succeed (conclusion: ${{ github.event.workflow_run.conclusion }})"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if this was a push event (not PR)
+          if [[ "${{ github.event.workflow_run.event }}" != "push" ]]; then
+            echo "CI workflow was not triggered by push event (event: ${{ github.event.workflow_run.event }})"
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          IS_FORK="${{ github.repository != github.event.workflow_run.repository.full_name }}"
+          IS_MAIN_BRANCH="${{ github.event.workflow_run.head_branch == 'main' }}"
+          IS_TAG="${{ startsWith(github.event.workflow_run.head_branch, 'refs/tags/') }}"
+          ENABLE_MAIN_PUBLISH="${{ env.ENABLE_UPSTREAM_MAIN_PUBLISH }}"
+          SHOULD_PUBLISH="true"
+          
+          if [[ "$IS_FORK" == "true" ]] && [[ "$IS_MAIN_BRANCH" == "true" ]] && [[ "$IS_TAG" == "false" ]] && [[ "$ENABLE_MAIN_PUBLISH" == "false" ]]; then
+            SHOULD_PUBLISH="false"
+          fi
+          
+          echo "should_publish=$SHOULD_PUBLISH" >> $GITHUB_OUTPUT
+          echo "Final decision: should_publish=$SHOULD_PUBLISH"
 
-  build-arm64:
-    runs-on: ubuntu-24.04-arm
+  merge:
+    runs-on: ubuntu-latest
+    needs: [check-ci-success]
+    if: needs.check-ci-success.outputs.should_publish == 'true'
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout/releases/tag/v6.0.0
-      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1 https://github.com/docker/setup-buildx-action/releases/tag/v3.11.1
-      - name: Login to Docker Hub
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
-        with:
-          username: blinklabs
-          password: ${{ secrets.DOCKER_PASSWORD }} # uses token
-      - name: Login to GHCR
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0 https://github.com/actions/cache/releases/tag/v4.3.0
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-${{ runner.arch }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-buildx-
-      - id: meta
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
-        with:
-          images: |
-            ${{ env.DOCKER_IMAGE_NAME }}
-            ${{ env.GHCR_IMAGE_NAME }}
-          flavor: |
-            latest=false
-            suffix=-arm64v8
-          tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
-            # branch
-            type=ref,event=branch
-            # semver
-            type=semver,pattern={{version}}
-      - name: push
-        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0 https://github.com/docker/build-push-action/releases/tag/v6.18.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-      # TEMP fix
-      # https://github.com/docker/build-push-action/issues/252
-      # https://github.com/moby/buildkit/issues/1896
-      - name: cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-      # TEMP fix
-      # Something strange is happening with the manifests when we push which
-      # breaks the downstream multi-arch-manifest, so pull and push to work
-      # around this by resubmitting manifests
-      - name: pull-and-push
-        run: |
-          for t in `echo '${{ steps.meta.outputs.tags }}'`; do
-            docker pull $t && docker push $t
-          done
 
-  multi-arch-manifest:
-    runs-on: [self-hosted, Linux, X64, ansible]
-    needs: [build-amd64, build-arm64]
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0 https://github.com/actions/checkout/releases/tag/v6.0.0
       - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1 https://github.com/docker/setup-buildx-action/releases/tag/v3.11.1
+
+      - name: Download digests
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases/tag/v6.0.0
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download ref info
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases/tag/v6.0.0
+        with:
+          name: ref-info
+          path: ${{ runner.temp }}/ref-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Login to Docker Hub
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
         with:
-          username: blinklabs
-          password: ${{ secrets.DOCKER_PASSWORD }} # uses token
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Login to GHCR
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0 https://github.com/docker/login-action/releases/tag/v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse ref info
+        id: ref
+        run: |
+          REF=$(cat ${{ runner.temp }}/ref-info/ref.txt)
+          REF_NAME=$(cat ${{ runner.temp }}/ref-info/ref_name.txt)
+          REF_TYPE=$(cat ${{ runner.temp }}/ref-info/ref_type.txt)
+          
+          echo "Ref info from ci-docker.yml:"
+          echo "  ref: $REF"
+          echo "  ref_name: $REF_NAME"
+          echo "  ref_type: $REF_TYPE"
+          
+          echo "ref=$REF" >> $GITHUB_OUTPUT
+          echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
+          echo "ref_type=$REF_TYPE" >> $GITHUB_OUTPUT
+          
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            VERSION="${REF_NAME#v}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            
+            if [[ "$VERSION" =~ -pre-|-rc|-alpha|-beta|-testci ]]; then
+              echo "is_latest=false" >> $GITHUB_OUTPUT
+              echo "Prerelease detected, will NOT create :latest tag"
+            else
+              echo "is_latest=true" >> $GITHUB_OUTPUT
+              echo "Release tag detected, WILL create :latest tag"
+            fi
+          fi
+
       - id: meta-dockerhub
         name: Metadata - Docker Hub
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0 https://github.com/docker/metadata-action/releases/tag/v5.10.0
         with:
           images: ${{ env.DOCKER_IMAGE_NAME }}
           flavor: |
-            latest=false
+            latest=false  # We manually control :latest via type=raw below
           tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
-            # branch
-            type=ref,event=branch
-            # semver
-            type=semver,pattern={{version}}
-      - id: meta-dockerhub-tag
-        name: Metadata - Docker Hub (Tags)
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
-        with:
-          images: |
-            ${{ env.DOCKER_IMAGE_NAME }}
-          flavor: |
-            latest=false
-          tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
+            # Branch name for branch pushes (e.g., main)
+            type=raw,value=${{ steps.ref.outputs.ref_name }},enable=${{ steps.ref.outputs.ref_type == 'branch' }}
+            # Version tag for tag pushes (e.g., v1.2.3 -> 1.2.3)
+            type=raw,value=${{ steps.ref.outputs.version }},enable=${{ steps.ref.outputs.ref_type == 'tag' }}
+            # :latest for non-prerelease tags only
+            type=raw,value=latest,enable=${{ steps.ref.outputs.is_latest == 'true' }}
+
       - id: meta-ghcr
         name: Metadata - GHCR
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0 https://github.com/docker/metadata-action/releases/tag/v5.10.0
         with:
           images: ${{ env.GHCR_IMAGE_NAME }}
           flavor: |
-            latest=false
+            latest=false  # We manually control :latest via type=raw below
           tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
-            # branch
-            type=ref,event=branch
-            # semver
-            type=semver,pattern={{version}}
-      - id: meta-ghcr-tag
-        name: Metadata - GHCR (Tags)
-        uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0 https://github.com/docker/metadata-action/releases/tag/v5.9.0
-        with:
-          images: |
-            ${{ env.GHCR_IMAGE_NAME }}
-          flavor: |
-            latest=false
-          tags: |
-            # Only version, no revision
-            type=match,pattern=v(.*)-(.*),group=1
+            # Branch name for branch pushes (e.g., main)
+            type=raw,value=${{ steps.ref.outputs.ref_name }},enable=${{ steps.ref.outputs.ref_type == 'branch' }}
+            # Version tag for tag pushes (e.g., v1.2.3 -> 1.2.3)
+            type=raw,value=${{ steps.ref.outputs.version }},enable=${{ steps.ref.outputs.ref_type == 'tag' }}
+            # :latest for non-prerelease tags only
+            type=raw,value=latest,enable=${{ steps.ref.outputs.is_latest == 'true' }}
 
-      # First, create manifests and push to GHCR
+      # Create multi-arch manifest for GHCR
+      # This copies the existing digest-based images from GHCR and creates a manifest with proper tags
+      # Images were already pushed to GHCR by ci-docker.yml - we're just retagging them here
+      - name: Create manifest list and push to GHCR
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.GHCR_IMAGE_NAME }}@sha256:%s ' *)
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta-ghcr.outputs.json }}
 
-      # Manifest for either branch or semver
-      - name: manifest-ghcr
+      # Create multi-arch manifest for Docker Hub
+      # This copies/mirrors images from GHCR to Docker Hub
+      # The source digests are in GHCR, but the -t tags specify Docker Hub destination
+      # imagetools automatically handles cross-registry copying
+      - name: Create manifest list and push to Docker Hub
+        working-directory: ${{ runner.temp }}/digests
         run: |
-          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-      # Optional manifest for tag versions (includes revisions)
-      - name: manifest-ghcr-tags
-        run: |
-          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-            docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
-      # Push various manifests
-      - name: push-ghcr
-        run: |
-          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-      - name: push-ghcr-tags
-        run: |
-          docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest
-          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
+          # Build tags list from Docker Hub metadata
+          TAGS=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          
+          # Build source digests list (from GHCR)
+          DIGESTS=$(printf '${{ env.GHCR_IMAGE_NAME }}@sha256:%s ' *)
+          
+          echo "Creating Docker Hub manifest with tags: $TAGS"
+          echo "Source digests from GHCR: $DIGESTS"
+          
+          # imagetools create copies from GHCR digests to Docker Hub with specified tags
+          docker buildx imagetools create $TAGS $DIGESTS
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta-dockerhub.outputs.json }}
 
-      # Now, create manifests for Docker Hub
+      # Verify manifests were created successfully
+      - name: Inspect GHCR image
+        continue-on-error: true
+        run: |
+          echo "Inspecting GHCR manifest:"
+          docker buildx imagetools inspect ${{ env.GHCR_IMAGE_NAME }}:${{ steps.meta-ghcr.outputs.version }}
 
-      - name: manifest-dockerhub
+      - name: Inspect Docker Hub image
+        continue-on-error: true
         run: |
-          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-      - name: manifest-dockerhub-tags
-        run: |
-          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-            docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
-      - name: push-dockerhub
-        run: |
-          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-      - name: push-dockerhub-tags
-        run: |
-          docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest
-          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
+          echo "Inspecting Docker Hub manifest:"
+          IMAGE_REF="docker.io/${{ env.DOCKER_IMAGE_NAME }}:${{ steps.meta-dockerhub.outputs.version }}"
+          echo "Image reference: $IMAGE_REF"
+          if [ -n "$IMAGE_REF" ] && [ "$IMAGE_REF" != "docker.io/:" ]; then
+            docker buildx imagetools inspect "$IMAGE_REF"
+          else
+            echo "Invalid image reference, skipping inspect"
+          fi
 
       # Update Docker Hub from README
 
+      # Updates Docker Hub repository description from README.md
+      # Requires DOCKER_PASSWORD secret with read/write permissions
+      # Note: Personal Access Tokens need "Read, Write, Delete" permissions
       - name: Docker Hub Description
+        continue-on-error: true  # Don't fail workflow if description update fails
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0 https://github.com/peter-evans/dockerhub-description/releases/tag/v5.0.0
         with:
-          username: blinklabs
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}  # Set in: Settings > Secrets > DOCKER_PASSWORD
           repository: ${{ env.DOCKER_IMAGE_NAME }}
           readme-filepath: ./README.md
           short-description: "Cardano Node built from source on Debian"
 
   github-release:
-    runs-on: [self-hosted, Linux, X64, ansible]
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    needs: [multi-arch-manifest]
+    needs: [merge]
     steps:
-      - run: 'echo "RELEASE_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV'
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/releases/tag/v8.0.0
-        if: startsWith(github.ref, 'refs/tags/')
+      # Download ref info to determine if this is a tag and get tag name
+      - name: Download ref info
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0 https://github.com/actions/download-artifact/releases/tag/v6.0.0
+        with:
+          name: ref-info
+          path: ${{ runner.temp }}/ref-info
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Parse ref info
+        id: ref
+        run: |
+          REF_NAME=$(cat ${{ runner.temp }}/ref-info/ref_name.txt)
+          REF_TYPE=$(cat ${{ runner.temp }}/ref-info/ref_type.txt)
+          
+          echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
+          echo "ref_type=$REF_TYPE" >> $GITHUB_OUTPUT
+          
+          # Check if prerelease based on tag name
+          if [[ "$REF_NAME" =~ -pre-|-rc|-alpha|-beta|-testci ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Tag: $REF_NAME"
+          echo "Type: $REF_TYPE"
+
+      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0 https://github.com/actions/github-script/releases/tag/v8
+        if: steps.ref.outputs.ref_type == 'tag'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -302,11 +273,11 @@ jobs:
               await github.rest.repos.createRelease({
                 draft: false,
                 generate_release_notes: true,
-                name: process.env.RELEASE_TAG,
+                name: '${{ steps.ref.outputs.ref_name }}',
                 owner: context.repo.owner,
-                prerelease: ${{ (startsWith(github.ref, 'refs/tags/') && contains(github.ref, '-pre-')) && true || false }},
+                prerelease: ${{ steps.ref.outputs.is_prerelease == 'true' }},
                 repo: context.repo.repo,
-                tag_name: process.env.RELEASE_TAG,
+                tag_name: '${{ steps.ref.outputs.ref_name }}',
               });
             } catch (error) {
               core.setFailed(error.message);
