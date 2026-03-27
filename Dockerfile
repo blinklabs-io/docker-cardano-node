@@ -16,6 +16,7 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && mkdir -p /root/.local/bin/ \
     && cp -p "$(./scripts/bin-path.sh cardano-node)" /root/.local/bin/ \
     && cp -p "$(./scripts/bin-path.sh cardano-tracer)" /root/.local/bin/ \
+    && cp -p "$(./scripts/bin-path.sh cardano-submit-api)" /root/.local/bin/ \
     && rm -rf /root/.cabal/packages \
     && rm -rf /usr/local/lib/ghc-${GHC_VERSION}/ /usr/local/share/doc/ghc-${GHC_VERSION}/ \
     && rm -rf /code/cardano-node/dist-newstyle/ \
@@ -28,7 +29,7 @@ FROM ghcr.io/blinklabs-io/mithril-signer:0.3.7-1 AS mithril-signer
 FROM ghcr.io/blinklabs-io/nview:0.13.0 AS nview
 FROM ghcr.io/blinklabs-io/txtop:0.14.0 AS txtop
 
-FROM debian:bookworm-slim AS cardano-node
+FROM debian:bookworm-slim AS cardano-base
 ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
 ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
@@ -40,7 +41,6 @@ COPY --from=mithril-client /bin/mithril-client /usr/local/bin/
 COPY --from=mithril-signer /bin/mithril-signer /usr/local/bin/
 COPY --from=nview /bin/nview /usr/local/bin/
 COPY --from=txtop /bin/txtop /usr/local/bin/
-COPY bin/ /usr/local/bin/
 RUN apt-get update -y && \
   apt-get install -y \
     bc \
@@ -66,5 +66,14 @@ RUN apt-get update -y && \
     zlib1g && \
   rm -rf /var/lib/apt/lists/* && \
   chmod +x /usr/local/bin/*
+
+FROM cardano-base AS cardano-tracer
+ENTRYPOINT ["cardano-tracer"]
+
+FROM cardano-base AS cardano-submit-api
+ENTRYPOINT ["cardano-submit-api"]
+
+FROM cardano-base AS cardano-node
+COPY bin/ /usr/local/bin/
 EXPOSE 3001 12788 12798
 ENTRYPOINT ["/usr/local/bin/entrypoint"]

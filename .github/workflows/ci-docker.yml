@@ -2,13 +2,13 @@ name: Docker CI
 
 on:
   pull_request:
-    branches: ["main", "release/**"]
+    branches: ['main', 'release/**']
     paths:
-      ["Dockerfile", "bin/**", "config/**", ".github/workflows/ci-docker.yml"]
+      ['Dockerfile', 'bin/**', 'config/**', '.github/workflows/ci-docker.yml']
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: blinklabs/cardano-node
+  IMAGE_OWNER: blinklabs-io
 
 permissions:
   contents: read
@@ -18,6 +18,7 @@ jobs:
     strategy:
       matrix:
         arch: [amd64, arm64]
+        image: [cardano-node, cardano-tracer, cardano-submit-api]
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 https://github.com/actions/checkout/releases/tag/v6.0.2
@@ -27,7 +28,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0 https://github.com/docker/metadata-action/releases/tag/v6.0.0
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image }}
           flavor: |
             latest=false
             suffix=-${{ matrix.arch == 'arm64' && 'arm64v8' || 'amd64' }}
@@ -37,6 +38,7 @@ jobs:
         with:
           context: .
           push: false
+          target: ${{ matrix.image }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=buildkit-${{ matrix.arch }}

@@ -12,6 +12,19 @@ image. This image uses FHS paths and installs into `/usr/local` while taking
 advantage of multi-stage image builds to reduce final image size over the
 official Nix-based distribution.
 
+## Additional Images
+
+The Dockerfile also exposes build targets for `cardano-tracer` and
+`cardano-submit-api`, reusing the same build artifacts as the full node image.
+
+```bash
+docker build --target cardano-tracer -t ghcr.io/blinklabs-io/cardano-tracer .
+docker build --target cardano-submit-api -t ghcr.io/blinklabs-io/cardano-submit-api .
+```
+
+These targets keep the Cardano executables and supporting libraries while
+omitting the node entrypoint scripts.
+
 ## Running a Cardano Node
 
 The container image has some differing behaviors depending on how it's
@@ -102,6 +115,7 @@ fully configurable code path. Do not set the `NETWORK` environment variable.
 To run a Cardano full node on mainnet with minimal configuration and defaults:
 
 Cardano Node before 10.3.1:
+
 ```bash
 docker run --detach \
   --name cardano-node \
@@ -114,6 +128,7 @@ docker run --detach \
 **NOTE** The container paths for persist disks are different in this mode
 
 Cardano Node 10.3.1 and above:
+
 ```bash
 docker run --detach \
   --name cardano-node \
@@ -172,17 +187,20 @@ docker run --detach \
 With dynamic block forging enabled, you can control block production without restarting the node:
 
 - **Enable block forging**: Ensure credential files are present and send SIGHUP
+
   ```bash
   docker exec cardano-node pkill -SIGHUP cardano-node
   ```
 
 - **Disable block forging**: Move/rename credential files and send SIGHUP
+
   ```bash
   docker exec cardano-node mv /opt/cardano/config/keys/kes.skey /opt/cardano/config/keys/kes.skey.disabled
   docker exec cardano-node pkill -SIGHUP cardano-node
   ```
 
 - **Re-enable block forging**: Restore credential files and send SIGHUP
+
   ```bash
   docker exec cardano-node mv /opt/cardano/config/keys/kes.skey.disabled /opt/cardano/config/keys/kes.skey
   docker exec cardano-node pkill -SIGHUP cardano-node
