@@ -55,6 +55,7 @@ RUN apt-get update -y && \
     libsystemd0 \
     libssl3 \
     libtinfo6 \
+    liburing2 \
     llvm-14-runtime \
     lsof \
     netbase \
