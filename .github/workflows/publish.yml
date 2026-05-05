@@ -218,60 +218,44 @@ jobs:
             # Only version, no revision
             type=match,pattern=v(.*)-(.*),group=1
 
-      # First, create manifests and push to GHCR
+      # Create and push manifests to GHCR.
+      # Uses `docker buildx imagetools create` rather than `docker manifest
+      # create --amend` because the latter reuses any stale manifest data
+      # cached locally in ~/.docker/manifests on self-hosted runners, which
+      # caused unrevisioned tags (e.g. 10.7.1) to keep pointing at the
+      # previous revision's per-arch digests instead of the current build.
 
       # Manifest for either branch or semver
       - name: manifest-ghcr
         run: |
           for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+            docker buildx imagetools create -t ${t} ${t}-amd64 ${t}-arm64v8
           done
-      # Optional manifest for tag versions (includes revisions)
+      # Optional manifest for tag versions (includes revisions) plus :latest
       - name: manifest-ghcr-tags
         run: |
           for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-            docker manifest create ${{ env.GHCR_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
-      # Push various manifests
-      - name: push-ghcr
-        run: |
-          for t in `echo '${{ steps.meta-ghcr.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-      - name: push-ghcr-tags
-        run: |
-          docker manifest push ${{ env.GHCR_IMAGE_NAME }}:latest
-          for t in `echo '${{ steps.meta-ghcr-tag.outputs.tags }}'`; do
-            docker manifest push ${t}
+            docker buildx imagetools create \
+              -t ${t} \
+              -t ${{ env.GHCR_IMAGE_NAME }}:latest \
+              ${t}-amd64 ${t}-arm64v8
           done
         if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
 
-      # Now, create manifests for Docker Hub
+      # Now, create and push manifests for Docker Hub
 
       - name: manifest-dockerhub
         run: |
           for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
+            docker buildx imagetools create -t ${t} ${t}-amd64 ${t}-arm64v8
           done
       - name: manifest-dockerhub-tags
         run: |
           for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
-            docker manifest create ${t} --amend ${t}-amd64 --amend ${t}-arm64v8
-            docker manifest create ${{ env.DOCKER_IMAGE_NAME }}:latest --amend ${t}-amd64 --amend ${t}-arm64v8
-          done
-        if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
-      - name: push-dockerhub
-        run: |
-          for t in `echo '${{ steps.meta-dockerhub.outputs.tags }}'`; do
-            docker manifest push ${t}
-          done
-      - name: push-dockerhub-tags
-        run: |
-          docker manifest push ${{ env.DOCKER_IMAGE_NAME }}:latest
-          for t in `echo '${{ steps.meta-dockerhub-tag.outputs.tags }}'`; do
-            docker manifest push ${t}
+            docker buildx imagetools create \
+              -t ${t} \
+              -t ${{ env.DOCKER_IMAGE_NAME }}:latest \
+              ${t}-amd64 ${t}-arm64v8
           done
         if: startsWith(github.ref, 'refs/tags/') && ! contains(github.ref, '-pre-')
 
