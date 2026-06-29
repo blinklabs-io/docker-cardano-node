@@ -1,4 +1,4 @@
-FROM ghcr.io/blinklabs-io/haskell:9.6.7-3.12.1.0-3 AS cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:9.12.3-3.14.2.0-1 AS cardano-node-build
 # Install cardano-node
 ARG NODE_VERSION=11.0.1
 ENV NODE_VERSION=${NODE_VERSION}
