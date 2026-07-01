@@ -1,23 +1,14 @@
-name: Test Issue Close Trigger
-permissions:
-  contents: read
+# Generated automatically by org-governance-bot. Do not edit manually.
+name: "Test Issue Close Trigger"
+
 on:
   issues:
-    types: [closed]
+    types:
+      - closed
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print closed issue info
-        env:
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-        run: |
-          echo "Issue Number: $ISSUE_NUMBER"
-          # Prevent workflow command injection from untrusted issue titles
-          TOKEN=$(uuidgen)
-          echo "::stop-commands::${TOKEN}"
-          echo "Title: $ISSUE_TITLE"
-          echo "::${TOKEN}::"
-          echo "Workflow triggered successfully when issue was closed."
+  orchestrate:
+    uses: blinklabs-io/actions/.github/workflows/reuseable-test-issue-on-close.yml@main
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      issue_title: ${{ github.event.issue.title }}
