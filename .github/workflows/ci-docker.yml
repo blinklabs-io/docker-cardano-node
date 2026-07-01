@@ -14,7 +14,13 @@ on:
 
 jobs:
   orchestrate:
+    strategy:
+      matrix:
+        image:
+          - cardano-node
+          - cardano-tracer
+          - cardano-submit-api
     uses: blinklabs-io/actions/.github/workflows/reuseable-ci-docker-multiarch.yml@main
     with:
-      build-target: cardano-node
-      image-name: blinklabs-io/cardano-node
+      build-target: ${{ matrix.image }}
+      image-name: blinklabs-io/${{ matrix.image }}
