@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   orchestrate:
-    uses: blinklabs-io/actions/.github/workflows/reuseable-publish-docker-multiarch.yml@main
+    uses: blinklabs-io/actions/.github/workflows/reuseable-publish-docker-multiarch.yml@d3aa875070b18acdcb31256100558d44c16b512f
     secrets:
       docker-password: ${{ secrets.DOCKER_PASSWORD }}
     with:
