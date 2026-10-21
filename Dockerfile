@@ -1,4 +1,4 @@
-FROM ghcr.io/blinklabs-io/haskell:9.12.3-3.14.2.0-1 AS cardano-node-build
+FROM ghcr.io/blinklabs-io/haskell:9.6.7-3.12.1.0-4 AS cardano-node-build
 # Install cardano-node
 ARG NODE_VERSION=11.1.3
 ENV NODE_VERSION=${NODE_VERSION}
@@ -21,16 +21,16 @@ RUN echo "Building tags/${NODE_VERSION}..." \
     && rm -rf /code/cardano-node/dist-newstyle/ \
     && rm -rf /root/.cabal/store/ghc-${GHC_VERSION}
 
-FROM ghcr.io/blinklabs-io/cardano-cli:11.2.3.1-1 AS cardano-cli
-FROM ghcr.io/blinklabs-io/cardano-configs:20260915-1 AS cardano-configs
-FROM ghcr.io/blinklabs-io/mithril-client:0.13.20-1 AS mithril-client
-FROM ghcr.io/blinklabs-io/mithril-signer:1.1.9-1 AS mithril-signer
-FROM ghcr.io/blinklabs-io/nview:0.15.2 AS nview
+FROM ghcr.io/blinklabs-io/cardano-cli:11.4.0.0-2 AS cardano-cli
+FROM ghcr.io/blinklabs-io/cardano-configs:20261020-1 AS cardano-configs
+FROM ghcr.io/blinklabs-io/mithril-client:0.13.20-2 AS mithril-client
+FROM ghcr.io/blinklabs-io/mithril-signer:1.1.9-2 AS mithril-signer
+FROM ghcr.io/blinklabs-io/nview:0.16.0 AS nview
 FROM ghcr.io/blinklabs-io/txtop:0.16.0 AS txtop
 
 FROM debian:bookworm-slim AS cardano-base
-ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
-ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH"
+ENV LD_LIBRARY_PATH="/usr/local/lib"
+ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
 COPY --from=cardano-node-build /usr/local/lib/ /usr/local/lib/
 COPY --from=cardano-node-build /usr/local/include/ /usr/local/include/
 COPY --from=cardano-node-build /root/.local/bin/cardano-* /usr/local/bin/
@@ -43,6 +43,7 @@ COPY --from=txtop /bin/txtop /usr/local/bin/
 RUN apt-get update -y && \
   apt-get install -y \
     bc \
+    ca-certificates \
     curl \
     iproute2 \
     jq \
