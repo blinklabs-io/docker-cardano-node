@@ -30,7 +30,8 @@ omitting the node entrypoint scripts.
 The container image has some differing behaviors depending on how it's
 invoked. There is a `NETWORK` environment variable which can be used as a
 short cut to starting nodes on a specific named Cardano network with a default
-configuration.
+configuration. DijkstraNet is selected with `NETWORK=dijkstra` (network
+magic 6) and synchronizes from genesis.
 
 We recommend using this method for running the container if you are not
 familiar with running a node.
