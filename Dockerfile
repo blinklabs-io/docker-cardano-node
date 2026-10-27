@@ -26,7 +26,7 @@ FROM ghcr.io/blinklabs-io/cardano-configs:20261024-1 AS cardano-configs
 FROM ghcr.io/blinklabs-io/mithril-client:0.13.20-2 AS mithril-client
 FROM ghcr.io/blinklabs-io/mithril-signer:1.1.9-2 AS mithril-signer
 FROM ghcr.io/blinklabs-io/nview:0.17.0 AS nview
-FROM ghcr.io/blinklabs-io/txtop:0.16.0 AS txtop
+FROM ghcr.io/blinklabs-io/txtop:0.17.0 AS txtop
 
 FROM debian:bookworm-slim AS cardano-base
 ENV LD_LIBRARY_PATH="/usr/local/lib"
